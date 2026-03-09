@@ -8,8 +8,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     @Override
     public ExpressionNode visitCompilationUnit(LamaParser.CompilationUnitContext ctx) {
-        // Handle import declarations and scope expression
-        // For now, just return the scope expression
+        // TODO
         if (ctx.scopeExpression() != null) {
             return visit(ctx.scopeExpression());
         }
@@ -18,19 +17,16 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     @Override
     public ExpressionNode visitScopeExpression(LamaParser.ScopeExpressionContext ctx) {
-        // Handle multiple definitions and a final expression
         if (ctx.expression() != null) {
             return visit(ctx.expression());
         }
-        // If there's no final expression, return a dummy node
         return new IntegerLiteralNode(0);
     }
 
     @Override
     public ExpressionNode visitExpression(LamaParser.ExpressionContext ctx) {
-        // Handle expression sequences separated by semicolons
         if (ctx.expression().size() > 1) {
-            // For now, just return the last expression
+            // TODO
             return visit(ctx.expression(ctx.expression().size() - 1));
         } else {
             return visit(ctx.basicExpression());
