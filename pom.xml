@@ -39,6 +39,12 @@
             <version>23.1.0</version>
             <scope>provided</scope>
         </dependency>
+        
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.13.2</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -79,5 +85,39 @@
 
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>antlr-code-generation</id>
+            <activation>
+                <file>
+                    <exists>src/main/java/com/lama/truffle/parser/Lama.g4</exists>
+                </file>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.antlr</groupId>
+                        <artifactId>antlr4-maven-plugin</artifactId>
+                        <version>4.13.2</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>antlr4</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <sourceDirectory>src/main/java/com/lama/truffle/parser</sourceDirectory>
+                            <outputDirectory>target/generated-sources/antlr4/com/lama/truffle/parser</outputDirectory>
+                            <includes>
+                                <include>Lama.g4</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

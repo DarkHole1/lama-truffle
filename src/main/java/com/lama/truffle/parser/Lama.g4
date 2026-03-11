@@ -115,11 +115,11 @@ primary
     ;
 
 arrayExpression
-    : '[' '[' (expression (',' expression)*)? ']' ']'
+    : '[' (expression (',' expression)*)? ']'
     ;
 
 listExpression
-    : '{' '[' (expression (',' expression)*)? ']' '}'
+    : '{' (expression (',' expression)*)? '}'
     ;
 
 sExpression
@@ -189,11 +189,11 @@ sExprPattern
     ;
 
 arrayPattern
-    : '[' '[' (pattern (',' pattern)*)? ']' ']'
+    : '[' (pattern (',' pattern)*)? ']'
     ;
 
 listPattern
-    : '{' '[' (pattern (',' pattern)*)? ']' '}'
+    : '{' (pattern (',' pattern)*)? '}'
     ;
 
 caseExpression

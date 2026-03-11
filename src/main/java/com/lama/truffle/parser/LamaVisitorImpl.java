@@ -17,6 +17,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     @Override
     public ExpressionNode visitScopeExpression(LamaParser.ScopeExpressionContext ctx) {
+        // TODO: definitions
         if (ctx.expression() != null) {
             return visit(ctx.expression());
         }
@@ -162,6 +163,11 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         } else {
             return visit(ctx.postfixExpression());
         }
+    }
+
+    @Override
+    public ExpressionNode visitPostfixExpression() {
+        
     }
 
     @Override
