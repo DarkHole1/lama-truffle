@@ -4,12 +4,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class IntegerLiteralNode extends LiteralNode {
 
-    public IntegerLiteralNode(int value) {
+    public IntegerLiteralNode(long value) {
         super(value);
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
-        return (int) getValue();
+        return (long) getValue();
     }
 }

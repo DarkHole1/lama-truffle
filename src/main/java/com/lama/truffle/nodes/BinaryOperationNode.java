@@ -56,7 +56,7 @@ public abstract class BinaryOperationNode extends ExpressionNode {
     }
 
     @Specialization
-    protected int doIntInt(int left, int right) {
+    protected long doLongLong(long left, long right) {
         switch (operator) {
             case ADD:
                 return left + right;
@@ -90,64 +90,6 @@ public abstract class BinaryOperationNode extends ExpressionNode {
             default:
                 throw new UnsupportedOperationException("Operator " + operator + " not supported for integers");
         }
-    }
-
-    @Specialization
-    protected int doDoubleDouble(double left, double right) {
-        switch (operator) {
-            case ADD:
-                return (int) (left + right);
-            case SUBTRACT:
-                return (int) (left - right);
-            case MULTIPLY:
-                return (int) (left * right);
-            case DIVIDE:
-                if (right == 0.0) {
-                    throw new ArithmeticException("Division by zero");
-                }
-                return (int) (left / right);
-            case MODULO:
-                return (int) (left % right);
-            case EQUAL:
-                return Math.abs(left - right) < 1e-9 ? 1 : 0;
-            case NOT_EQUAL:
-                return Math.abs(left - right) >= 1e-9 ? 1 : 0;
-            case LESS:
-                return left < right ? 1 : 0;
-            case LESS_EQUAL:
-                return left <= right ? 1 : 0;
-            case GREATER:
-                return left > right ? 1 : 0;
-            case GREATER_EQUAL:
-                return left >= right ? 1 : 0;
-            default:
-                throw new UnsupportedOperationException("Operator " + operator + " not supported for doubles");
-        }
-    }
-
-    @Specialization
-    protected int doBooleanBoolean(boolean left, boolean right) {
-        switch (operator) {
-            case LOGICAL_AND:
-                return left && right ? 1 : 0;
-            case LOGICAL_OR:
-                return left || right ? 1 : 0;
-            case EQUAL:
-                return left == right ? 1 : 0;
-            case NOT_EQUAL:
-                return left != right ? 1 : 0;
-            default:
-                throw new UnsupportedOperationException("Operator " + operator + " not supported for booleans");
-        }
-    }
-
-    @TruffleBoundary
-    @Specialization
-    protected String doStringString(String left, String right) {
-        if (operator == BinaryOperator.ADD) {
-            return left + right; // String concatenation
-        }
-        throw new UnsupportedOperationException("Operator " + operator + " not supported for strings");
     }
 
     @Override

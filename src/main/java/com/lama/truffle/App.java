@@ -27,7 +27,7 @@ public class App {
         LamaParser parser = new LamaParser(new CommonTokenStream(new LamaLexer(CharStreams.fromFileName("./Sort.lama"))));
         ExpressionNode node = parser.compilationUnit().accept(new LamaVisitorImpl());
 
-        System.out.println(node);
+        System.out.println(((VariableAccessNode)node).getVariableName());
         
         System.out.println("\nApplication completed successfully!");
     }
