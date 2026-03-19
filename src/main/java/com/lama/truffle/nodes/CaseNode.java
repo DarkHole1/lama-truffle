@@ -21,14 +21,44 @@ public class CaseNode extends ExpressionNode {
     protected Object doCase(VirtualFrame frame) {
         Object scrutineeValue = scrutinee.execute(frame);
 
-        // TODO
         // Try each branch in order
         for (ExpressionNode branch : branches) {
-            // For now, just execute the first branch (proper pattern matching needs implementation)
-            return branch.execute(frame);
+            if (branch instanceof CaseBranchNode) {
+                CaseBranchNode caseBranch = (CaseBranchNode) branch;
+                
+                // Create a fresh environment for this branch's variable bindings
+                // The VariableEnvironment uses a fixed slot, so we need to save and restore
+                VariableEnvironment savedEnv = null;
+                try {
+                    savedEnv = VariableEnvironment.getOrCreate(frame);
+                } catch (IllegalArgumentException e) {
+                    // Environment slot doesn't exist yet
+                }
+                
+                // Clear environment for fresh variable bindings in this branch
+                VariableEnvironment newEnv = new VariableEnvironment();
+                if (savedEnv != null) {
+                    // Copy existing variables to preserve outer scope
+                    for (java.util.Map.Entry<String, Object> entry : savedEnv.getVariables().entrySet()) {
+                        newEnv.set(entry.getKey(), entry.getValue());
+                    }
+                }
+                frame.setObject(VariableEnvironment.SLOT_INDEX, newEnv);
+                
+                // Try to match the pattern
+                if (caseBranch.matches(scrutineeValue, frame)) {
+                    // Pattern matched - execute the body with bound variables
+                    return caseBranch.execute(frame);
+                }
+                
+                // Pattern didn't match - restore environment and try next branch
+                if (savedEnv != null) {
+                    frame.setObject(VariableEnvironment.SLOT_INDEX, savedEnv);
+                }
+            }
         }
 
-        return 0; // No match found
+        throw new RuntimeException("No matching pattern found in case expression");
     }
 
     public ExpressionNode getScrutinee() {

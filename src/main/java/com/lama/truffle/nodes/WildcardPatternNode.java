@@ -11,4 +11,10 @@ public class WildcardPatternNode extends PatternNode {
     public boolean match(Object value, VirtualFrame frame) {
         return true; // Wildcard matches everything
     }
+
+    @Override
+    public Object execute(VirtualFrame frame) {
+        // Binds nothing
+        return null;
+    }
 }

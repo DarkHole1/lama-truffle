@@ -1,13 +1,12 @@
 package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
 
 /**
  * Represents a single branch in a case expression.
  * Contains a pattern to match against and a body to execute if matched.
  */
-public class CaseBranchNode extends Node {
+public class CaseBranchNode extends ExpressionNode {
 
     private final PatternNode pattern;
     @Child private ExpressionNode body;

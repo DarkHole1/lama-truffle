@@ -11,7 +11,10 @@ public class ArrayLiteralNode extends ExpressionNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        // TODO Auto-generated method stub
-        return null;
+        Object[] result = new Object[expressions.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = expressions[i].execute(frame);
+        }
+        return result;
     }
 }

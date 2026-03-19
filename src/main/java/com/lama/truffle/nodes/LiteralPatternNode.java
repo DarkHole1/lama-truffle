@@ -24,4 +24,10 @@ public class LiteralPatternNode extends PatternNode {
     public Object getLiteralValue() {
         return literalValue;
     }
+
+    @Override
+    public Object execute(VirtualFrame frame) {
+        // Binds nothing
+        return null;
+    }
 }

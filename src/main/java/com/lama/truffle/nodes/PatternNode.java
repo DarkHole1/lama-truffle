@@ -1,13 +1,12 @@
 package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
 
 /**
  * Base class for pattern matching in case expressions.
  * Patterns can match values and optionally bind variables.
  */
-public abstract class PatternNode extends Node {
+public abstract class PatternNode extends ExpressionNode {
 
     /**
      * Try to match the given value against this pattern.

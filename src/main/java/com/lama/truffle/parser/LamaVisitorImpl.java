@@ -1,6 +1,7 @@
 package com.lama.truffle.parser;
 
 import com.lama.truffle.nodes.*;
+import com.lama.truffle.parser.LamaParser.*;
 
 import static com.lama.truffle.nodes.BinaryOperationNode.BinaryOperator.*;
 
@@ -16,11 +17,53 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     @Override
     public ExpressionNode visitScopeExpression(LamaParser.ScopeExpressionContext ctx) {
-        // TODO: definitions
-        if (ctx.expression() != null) {
-            return visit(ctx.expression());
+        // Collect all definitions
+        DefinitionNode[] definitions = new DefinitionNode[0];
+        if (ctx.definition().size() > 0) {
+            definitions = new DefinitionNode[ctx.definition().size()];
+            for (int i = 0; i < ctx.definition().size(); i++) {
+                definitions[i] = (DefinitionNode) visitDefinition(ctx.definition(i));
+            }
         }
-        return new IntegerLiteralNode(0);
+
+        // Get the final expression (if any)
+        ExpressionNode expression = null;
+        if (ctx.expression() != null) {
+            expression = visit(ctx.expression());
+        }
+
+        return new ScopeNode(definitions, expression);
+    }
+
+    public ExpressionNode visitDefinition(LamaParser.DefinitionContext ctx) {
+        if (ctx.variableDefinition() != null) {
+            return visitVariableDefinition(ctx.variableDefinition());
+        } else if (ctx.functionDefinition() != null) {
+            return visitFunctionDefinition(ctx.functionDefinition());
+        } else if (ctx.infixDefinition() != null) {
+            throw new UnsupportedOperationException("infix definitions are not supported");
+        }
+        return null;
+    }
+
+    public ExpressionNode visitVariableDefinition(LamaParser.VariableDefinitionContext ctx) {
+        // Handle: ('var' | 'public') variableDefinitionSequence ';'
+        // For now, handle single variable definition
+        LamaParser.VariableDefinitionSequenceContext seq = ctx.variableDefinitionSequence();
+        if (seq.variableDefinitionItem().size() == 1) {
+            return visitVariableDefinitionItem(seq.variableDefinitionItem(0));
+        }
+        // Multiple variables - create a sequence (for now, just handle the first one)
+        return visitVariableDefinitionItem(seq.variableDefinitionItem(0));
+    }
+
+    public ExpressionNode visitVariableDefinitionItem(LamaParser.VariableDefinitionItemContext ctx) {
+        String varName = ctx.LIDENT().getText();
+        ExpressionNode valueNode = null;
+        if (ctx.basicExpression() != null) {
+            valueNode = visit(ctx.basicExpression());
+        }
+        return new VariableDefinitionNode(varName, valueNode);
     }
 
     @Override
@@ -171,10 +214,10 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         } else if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("(")) {
             // Function call: postfixExpression '(' (expression (',' expression)*)? ')'
             ExpressionNode functionNode = visit(ctx.postfixExpression());
-            
+
             // Get the function name from the postfixExpression
             String functionName = ctx.postfixExpression().getText();
-            
+
             // Parse arguments
             ExpressionNode[] argumentNodes = new ExpressionNode[0];
             if (ctx.expression().size() > 0) {
@@ -183,7 +226,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     argumentNodes[i] = visit(ctx.expression(i));
                 }
             }
-            
+
             return new FunctionCallNode(functionName, argumentNodes);
         } else if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("[")) {
             // Array indexing
@@ -196,7 +239,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     @Override
     public ExpressionNode visitPrimary(LamaParser.PrimaryContext ctx) {
         if (ctx.DECIMAL() != null) {
-            int value = Integer.parseInt(ctx.DECIMAL().getText());
+            long value = Long.parseLong(ctx.DECIMAL().getText());
             return new IntegerLiteralNode(value);
         } else if (ctx.STRING() != null) {
             String value = ctx.STRING().getText();
@@ -310,6 +353,119 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         return new ForNode(init, condition, update, body);
     }
 
+    static class PatternVisitor extends LamaBaseVisitor<PatternNode> {
+        @Override
+        public PatternNode visitConsPattern(ConsPatternContext ctx) {
+            PatternNode headPattern = visit(ctx.simplePattern());
+            PatternNode tailPattern = visit(ctx.pattern());
+            return new ConsPatternNode(headPattern, tailPattern);
+        }
+
+        @Override
+        public PatternNode visitSimplePattern(SimplePatternContext ctx) {
+            if (ctx.listPattern() != null) {
+                return visit(ctx.listPattern());
+            }
+            if (ctx.arrayPattern() != null) {
+                return visit(ctx.arrayPattern());
+            }
+            if (ctx.wildcardPattern() != null) {
+                return new WildcardPatternNode();
+            }
+            if (ctx.sExprPattern() != null) {
+                return visit(ctx.sExprPattern());
+            }
+            if (ctx.LIDENT() != null) {
+                String varName = ctx.LIDENT().getText();
+                if (ctx.pattern() != null) {
+                    // LIDENT @ pattern - variable binding with nested pattern
+                    PatternNode nestedPattern = visit(ctx.pattern());
+                    return new VariablePatternNode(varName);
+                }
+                return new VariablePatternNode(varName);
+            }
+            if (ctx.DECIMAL() != null) {
+                long value = Long.parseLong(ctx.getText());
+                return new LiteralPatternNode(value);
+            }
+            if (ctx.STRING() != null) {
+                String value = ctx.STRING().getText();
+                value = value.substring(1, value.length() - 1);
+                return new LiteralPatternNode(value);
+            }
+            if (ctx.CHAR() != null) {
+                String value = ctx.CHAR().getText();
+                value = value.substring(1, value.length() - 1);
+                return new LiteralPatternNode((long) value.charAt(0));
+            }
+            if (ctx.TRUE() != null) {
+                return new LiteralPatternNode(1L);
+            }
+            if (ctx.FALSE() != null) {
+                return new LiteralPatternNode(0L);
+            }
+            if (ctx.BOX() != null) {
+                return new TypePatternNode(TypePatternNode.Type.BOX);
+            }
+            if (ctx.VAL() != null) {
+                return new TypePatternNode(TypePatternNode.Type.VAL);
+            }
+            if (ctx.STR() != null) {
+                return new TypePatternNode(TypePatternNode.Type.STR);
+            }
+            if (ctx.ARRAY_KW() != null) {
+                return new TypePatternNode(TypePatternNode.Type.ARRAY);
+            }
+            if (ctx.SEXP() != null) {
+                return new TypePatternNode(TypePatternNode.Type.SEXP);
+            }
+            if (ctx.FUN() != null) {
+                return new TypePatternNode(TypePatternNode.Type.FUN);
+            }
+            if (ctx.pattern() != null) {
+                return visit(ctx.pattern());
+            }
+            return new WildcardPatternNode();
+        }
+
+        @Override
+        public PatternNode visitSExprPattern(SExprPatternContext ctx) {
+            String tagName = ctx.UIDENT().getText();
+            PatternNode[] childPatterns = new PatternNode[0];
+            if (ctx.pattern() != null && ctx.pattern().size() > 0) {
+                childPatterns = new PatternNode[ctx.pattern().size()];
+                for (int i = 0; i < ctx.pattern().size(); i++) {
+                    childPatterns[i] = visit(ctx.pattern(i));
+                }
+            }
+            return new SexpPatternNode(tagName, childPatterns);
+        }
+
+        @Override
+        public PatternNode visitArrayPattern(ArrayPatternContext ctx) {
+            PatternNode[] elementPatterns = new PatternNode[0];
+            if (ctx.pattern() != null && ctx.pattern().size() > 0) {
+                elementPatterns = new PatternNode[ctx.pattern().size()];
+                for (int i = 0; i < ctx.pattern().size(); i++) {
+                    elementPatterns[i] = visit(ctx.pattern(i));
+                }
+            }
+            return new ArrayPatternNode(elementPatterns);
+        }
+
+        @Override
+        public PatternNode visitListPattern(ListPatternContext ctx) {
+            PatternNode[] elementPatterns = new PatternNode[0];
+            if (ctx.pattern() != null && ctx.pattern().size() > 0) {
+                elementPatterns = new PatternNode[ctx.pattern().size()];
+                for (int i = 0; i < ctx.pattern().size(); i++) {
+                    elementPatterns[i] = visit(ctx.pattern(i));
+                }
+            }
+            return new ListPatternNode(elementPatterns);
+        }
+    }
+
     @Override
     public ExpressionNode visitCaseExpression(LamaParser.CaseExpressionContext ctx) {
         ExpressionNode scrutinee = visit(ctx.expression());
@@ -317,8 +473,10 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
         for (int i = 0; i < ctx.caseBranches().caseBranch().size(); i++) {
             LamaParser.CaseBranchContext branchCtx = ctx.caseBranches().caseBranch(i);
-            // For now, just use the body (pattern matching needs proper frame support)
-            branches[i] = visit(branchCtx.scopeExpression());
+            // TODO
+            PatternNode pattern = branchCtx.pattern().accept(new PatternVisitor());
+            ExpressionNode expression = visit(branchCtx.scopeExpression());
+            branches[i] = new CaseBranchNode(pattern, expression);
         }
 
         return new CaseNode(scrutinee, branches);
@@ -326,10 +484,9 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     // Definition visitors
 
-    @Override
     public ExpressionNode visitFunctionDefinition(LamaParser.FunctionDefinitionContext ctx) {
         String functionName = ctx.LIDENT().getText();
-        
+
         // Get parameter names
         String[] paramNames = new String[0];
         if (ctx.functionArguments().LIDENT().size() > 0) {
@@ -338,15 +495,11 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 paramNames[i] = ctx.functionArguments().LIDENT(i).getText();
             }
         }
-        
+
         // Visit the body
         ExpressionNode body = visit(ctx.functionBody());
-        
-        // Create a named function node (closure)
-        FunctionNode funcNode = new FunctionNode(functionName, paramNames, body);
-        
-        // Return the function node - it will be stored in the frame when scope is executed
-        return funcNode;
+
+        return new FunctionDefinitionNode(functionName, paramNames, body);
     }
 
     @Override
