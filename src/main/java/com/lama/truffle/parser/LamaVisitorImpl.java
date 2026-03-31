@@ -325,7 +325,6 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             elifBranches = elifBods.toArray(new ExpressionNode[0]);
         }
 
-        // TODO
         return new IfNode(condition, thenBranch, elifConditions, elifBranches, elseBranch);
     }
 
@@ -379,6 +378,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 String varName = ctx.LIDENT().getText();
                 if (ctx.pattern() != null) {
                     // LIDENT @ pattern - variable binding with nested pattern
+                    // TODO
                     PatternNode nestedPattern = visit(ctx.pattern());
                     return new VariablePatternNode(varName);
                 }
@@ -473,7 +473,6 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
         for (int i = 0; i < ctx.caseBranches().caseBranch().size(); i++) {
             LamaParser.CaseBranchContext branchCtx = ctx.caseBranches().caseBranch(i);
-            // TODO
             PatternNode pattern = branchCtx.pattern().accept(new PatternVisitor());
             ExpressionNode expression = visit(branchCtx.scopeExpression());
             branches[i] = new CaseBranchNode(pattern, expression);

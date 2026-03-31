@@ -2,40 +2,46 @@
 
 This document lists all incomplete realizations and TODO items found in the codebase.
 
-## Core Language Features
+## Remaining TODOs
 
-### Pattern Matching (Case Expressions)
-- **File**: `src/main/java/com/lama/truffle/nodes/CaseNode.java`
-- **Issue**: Pattern matching is not implemented - just executes first branch
-- **TODO**: Implement proper pattern matching with scrutinee evaluation and pattern comparison
+### 3. CONS Operator - Incomplete Implementation
+- **File**: `src/main/java/com/lama/truffle/nodes/BinaryOperationNode.java` (line 89)
+- **Issue**: CONS operator returns only `left` value as placeholder
+- **TODO**: Implement proper list construction using `com.lama.truffle.types.List`
+- **Priority**: High (needed for list pattern matching to work correctly)
 
-## Parser Implementation
+### 4. Closure Execution - Not Implemented
+- **File**: `src/main/java/com/lama/truffle/types/Closure.java` (lines 49-51)
+- **Issue**: `Closure.execute()` returns `null` as placeholder
+- **TODO**: Implement proper closure execution with:
+  - Frame creation with captured variables
+  - Parameter binding
+  - Body execution
+- **Priority**: High (needed for function calls)
 
-### If Expression
+### 5. Function Calls - Not Implemented
 - **File**: `src/main/java/com/lama/truffle/parser/LamaVisitorImpl.java`
-- **Issue**: `visitIfExpression()` has TODO comment
-- **TODO**: Complete if-elif-else expression implementation
+- **Issue**: `visitPostfixExpression()` creates `FunctionCallNode` but execution is not implemented
+- **TODO**: Implement function lookup and closure invocation in `FunctionCallNode`
+- **Priority**: High
 
-### Function Calls
-- **File**: `src/main/java/com/lama/truffle/parser/LamaVisitorImpl.java`
-- **Issue**: Function call implementation is incomplete
-- **TODO**: Implement proper function lookup and closure creation
+### 6. Array Indexing - Not Implemented
+- **File**: `src/main/java/com/lama/truffle/parser/LamaVisitorImpl.java` (line ~250)
+- **Issue**: Array indexing `postfixExpression '[' expression ']'` returns array without indexing
+- **TODO**: Implement array element access
+- **Priority**: Medium
 
-### Anonymous Functions
-- **File**: `src/main/java/com/lama/truffle/parser/LamaVisitorImpl.java`
-- **Issue**: Anonymous function implementation is incomplete
-- **TODO**: Complete closure creation with proper frame management
+### 7. Variable Access - Uses VariableEnvironment
+- **File**: `src/main/java/com/lama/truffle/nodes/VariableAccessNode.java`
+- **Issue**: Should use `VariableEnvironment` for variable lookup
+- **TODO**: Verify/update variable access to use `VariableEnvironment.get()`
+- **Priority**: Medium
 
-## Runtime System
+---
 
-### Variable Environment
-- **File**: `src/main/java/com/lama/truffle/types/Closure.java`
-- **Issue**: `set()` method returns `null` instead of setting variable
-- **TODO**: Implement proper variable setting in closure environment
+## Summary by Priority
 
-## Configuration
-
-### Application Properties
-- **File**: `src/main/resources/application.properties`
-- **Issue**: Contains incomplete configuration lines
-- **TODO**: Complete application configuration
+| Priority | Count | Description |
+|----------|-------|-------------|
+| High     | 3     | CONS operator, Closure execution, Function calls |
+| Medium   | 2     | Array indexing, Variable access |

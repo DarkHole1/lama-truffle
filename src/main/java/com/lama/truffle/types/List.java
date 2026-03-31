@@ -4,7 +4,7 @@ public final class List {
     private Object first;
     private List next;
 
-    List(Object first, List next) {
+    public List(Object first, List next) {
         this.first = first;
         this.next = next;
     }

@@ -30,10 +30,10 @@ public class TypePatternNode extends PatternNode {
         switch (type) {
             case BOX:
                 // Boxed value: anything that's not an Integer (unboxed)
-                return value != null && !(value instanceof Integer) && !(value instanceof Long);
+                return value != null && !(value instanceof Long);
             case VAL:
                 // Unboxed integer value
-                return value instanceof Integer || value instanceof Long;
+                return value instanceof Long;
             case STR:
                 return value instanceof String;
             case ARRAY:
@@ -49,7 +49,6 @@ public class TypePatternNode extends PatternNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        // Type patterns don't bind variables, just check type
         return null;
     }
 

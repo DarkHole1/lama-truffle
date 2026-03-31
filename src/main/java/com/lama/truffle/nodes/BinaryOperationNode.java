@@ -1,9 +1,9 @@
 package com.lama.truffle.nodes;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.lama.truffle.types.List;
 
 @NodeChild("left")
 @NodeChild("right")
@@ -83,12 +83,19 @@ public abstract class BinaryOperationNode extends ExpressionNode {
                 return left > right ? 1 : 0;
             case GREATER_EQUAL:
                 return left >= right ? 1 : 0;
-            case CONS:
-                // For list construction, we'll return a simple representation
-                // In a real implementation, this would create a proper list structure
-                return left; // Placeholder
             default:
                 throw new UnsupportedOperationException("Operator " + operator + " not supported for integers");
+        }
+    }
+
+    @Specialization
+    protected Object doObjectObject(Object left, Object right) {
+        switch (operator) {
+            case CONS:
+                return new List(left, (List) right);
+
+            default:
+                throw new UnsupportedOperationException("Operator " + operator + " not supported for objects");
         }
     }
 
