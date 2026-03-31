@@ -212,11 +212,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         if (ctx.primary() != null) {
             return visit(ctx.primary());
         } else if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("(")) {
-            // Function call: postfixExpression '(' (expression (',' expression)*)? ')'
             ExpressionNode functionNode = visit(ctx.postfixExpression());
-
-            // Get the function name from the postfixExpression
-            String functionName = ctx.postfixExpression().getText();
 
             // Parse arguments
             ExpressionNode[] argumentNodes = new ExpressionNode[0];
@@ -227,11 +223,12 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 }
             }
 
-            return new FunctionCallNode(functionName, argumentNodes);
+            return new FunctionCallNode(functionNode, argumentNodes);
         } else if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals("[")) {
-            // Array indexing
-            ExpressionNode array = visit(ctx.postfixExpression());
-            return array;
+            // Array indexing: postfixExpression '[' expression ']'
+            ExpressionNode arrayNode = visit(ctx.postfixExpression());
+            ExpressionNode indexNode = visit(ctx.expression(0));
+            return ArrayAccessNodeGen.create(arrayNode, indexNode);
         }
         return visit(ctx.primary());
     }
@@ -378,11 +375,10 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 String varName = ctx.LIDENT().getText();
                 if (ctx.pattern() != null) {
                     // LIDENT @ pattern - variable binding with nested pattern
-                    // TODO
                     PatternNode nestedPattern = visit(ctx.pattern());
-                    return new VariablePatternNode(varName);
+                    return new VariablePatternNode(varName, nestedPattern);
                 }
-                return new VariablePatternNode(varName);
+                return new VariablePatternNode(varName, null);
             }
             if (ctx.DECIMAL() != null) {
                 long value = Long.parseLong(ctx.getText());

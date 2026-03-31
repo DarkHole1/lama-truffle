@@ -5,33 +5,32 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class FunctionCallNode extends ExpressionNode {
 
-    private final String functionName;
+    @Child private ExpressionNode functionNode;
     @Children private final ExpressionNode[] argumentNodes;
 
-    public FunctionCallNode(String functionName, ExpressionNode[] argumentNodes) {
-        this.functionName = functionName;
+    public FunctionCallNode(ExpressionNode functionNode, ExpressionNode[] argumentNodes) {
+        this.functionNode = functionNode;
         this.argumentNodes = argumentNodes;
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
-        // Execute all argument nodes first
+        Object funcObj = functionNode.execute(frame);
+
         Object[] arguments = new Object[argumentNodes.length];
         for (int i = 0; i < argumentNodes.length; i++) {
             arguments[i] = argumentNodes[i].execute(frame);
         }
 
-        // Try to get the function from the registry
-        Closure closure = FunctionRegistry.get(functionName);
-        
-        if (closure != null) {
-            return closure.execute(arguments);
+        if (funcObj instanceof Closure) {
+            Closure closure = (Closure) funcObj;
+            return closure.execute(frame, arguments);
         } else {
-            throw new RuntimeException("Function '" + functionName + "' is not defined or is not callable");
+            throw new RuntimeException("Expression evaluated into non-function");
         }
     }
 
-    public String getFunctionName() {
-        return functionName;
+    public ExpressionNode getFunctionNode() {
+        return functionNode;
     }
 }

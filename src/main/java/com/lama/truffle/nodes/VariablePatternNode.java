@@ -8,16 +8,20 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public class VariablePatternNode extends PatternNode {
 
     private final String variableName;
+    private final PatternNode nestedPatternNode;
 
-    public VariablePatternNode(String variableName) {
+    public VariablePatternNode(String variableName, PatternNode nestedPatternNode) {
         this.variableName = variableName;
+        this.nestedPatternNode = nestedPatternNode;
     }
 
     @Override
     public boolean match(Object value, VirtualFrame frame) {
-        // Bind the value to the variable using VariableEnvironment
         VariableEnvironment env = VariableEnvironment.getOrCreate(frame);
         env.set(variableName, value);
+        if (nestedPatternNode != null) {
+            return nestedPatternNode.match(value, frame);
+        }
         return true;
     }
 
@@ -27,7 +31,6 @@ public class VariablePatternNode extends PatternNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        // Return the bound variable value
         VariableEnvironment env = VariableEnvironment.getOrCreate(frame);
         return env.get(variableName);
     }
