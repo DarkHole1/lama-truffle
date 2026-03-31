@@ -9,20 +9,27 @@ import java.util.Map;
 
 /**
  * Represents a closure (function value) that captures the execution context.
- * A closure contains the function body, parameter names, and the captured variables.
+ * A closure contains the function body, parameter names, and the captured environment.
  */
 public final class Closure {
+
     private final String name;
     private final String[] parameterNames;
     private final ExpressionNode body;
     private final VariableEnvironment capturedEnvironment;
 
-    public Closure(String name, String[] parameterNames, ExpressionNode body, VirtualFrame capturedFrame) {
+    public Closure(String name, String[] parameterNames, ExpressionNode body, VariableEnvironment capturedEnvironment) {
         this.name = name;
         this.parameterNames = parameterNames;
         this.body = body;
-        // Capture the variable environment from the frame
-        this.capturedEnvironment = VariableEnvironment.getOrCreate(capturedFrame);
+        this.capturedEnvironment = capturedEnvironment;
+    }
+
+    /**
+     * Creates a closure by capturing the current environment from the frame.
+     */
+    public Closure(String name, String[] parameterNames, ExpressionNode body, VirtualFrame capturedFrame) {
+        this(name, parameterNames, body, VariableEnvironment.getOrCreate(capturedFrame));
     }
 
     public String getName() {
@@ -42,37 +49,37 @@ public final class Closure {
     }
 
     /**
-     * Executes this closure with the given arguments.
-     * Creates a new frame scope, binds parameters, and executes the body.
+     * Executes this closure with the given frame and arguments.
+     * Creates a new local environment for parameter bindings.
      */
     public Object execute(VirtualFrame frame, Object[] arguments) {
-        // Create a new variable environment for this function call
-        VariableEnvironment newEnv = VariableEnvironment.getOrCreate(frame);
+        // Get the current environment from the frame
+        VariableEnvironment currentEnv = VariableEnvironment.getOrCreate(frame);
         
-        // Save the current environment state to restore later (for nested calls)
-        Map<String, Object> savedVars = new HashMap<>();
+        // Save current variable state for parameters that might shadow existing variables
+        Map<String, Object> savedValues = new HashMap<>();
         for (String paramName : parameterNames) {
-            if (newEnv.has(paramName)) {
-                savedVars.put(paramName, newEnv.get(paramName));
+            if (currentEnv.has(paramName)) {
+                savedValues.put(paramName, currentEnv.get(paramName));
             }
         }
-        
-        // Bind parameters to arguments
+
+        // Bind parameters to arguments in the current environment
         for (int i = 0; i < parameterNames.length && i < arguments.length; i++) {
-            newEnv.set(parameterNames[i], arguments[i]);
+            currentEnv.set(parameterNames[i], arguments[i]);
         }
-        
+
         try {
-            // Execute the body
+            // Execute the function body
             return body.execute(frame);
         } finally {
-            // Restore saved variables (cleanup)
+            // Restore saved variables (cleanup parameter bindings)
             for (String paramName : parameterNames) {
-                if (savedVars.containsKey(paramName)) {
-                    newEnv.set(paramName, savedVars.get(paramName));
+                if (savedValues.containsKey(paramName)) {
+                    currentEnv.set(paramName, savedValues.get(paramName));
                 } else {
-                    // Remove the parameter binding
-                    // Note: VariableEnvironment doesn't have a remove method, so we leave it
+                    // Parameter was newly introduced - leave it or could be removed
+                    // For now we leave it as VariableEnvironment doesn't have remove
                 }
             }
         }

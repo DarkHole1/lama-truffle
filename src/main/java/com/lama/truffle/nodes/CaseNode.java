@@ -3,6 +3,9 @@ package com.lama.truffle.nodes;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Node for case (pattern-matching) expressions.
  * Evaluates the scrutinee and matches against patterns in order.
@@ -25,35 +28,41 @@ public class CaseNode extends ExpressionNode {
         for (ExpressionNode branch : branches) {
             if (branch instanceof CaseBranchNode) {
                 CaseBranchNode caseBranch = (CaseBranchNode) branch;
-                
+
                 // Create a fresh environment for this branch's variable bindings
-                // The VariableEnvironment uses a fixed slot, so we need to save and restore
+                // Save current environment state
                 VariableEnvironment savedEnv = null;
+                Map<String, Object> savedVariables = new HashMap<>();
                 try {
                     savedEnv = VariableEnvironment.getOrCreate(frame);
+                    // Save the current variables
+                    savedVariables.putAll(savedEnv.getLocalVariables());
                 } catch (IllegalArgumentException e) {
                     // Environment slot doesn't exist yet
                 }
-                
-                // Clear environment for fresh variable bindings in this branch
-                VariableEnvironment newEnv = new VariableEnvironment();
-                if (savedEnv != null) {
-                    // Copy existing variables to preserve outer scope
-                    for (java.util.Map.Entry<String, Object> entry : savedEnv.getVariables().entrySet()) {
-                        newEnv.set(entry.getKey(), entry.getValue());
-                    }
-                }
-                frame.setObject(VariableEnvironment.SLOT_INDEX, newEnv);
-                
+
                 // Try to match the pattern
                 if (caseBranch.matches(scrutineeValue, frame)) {
                     // Pattern matched - execute the body with bound variables
-                    return caseBranch.execute(frame);
+                    Object result = caseBranch.execute(frame);
+                    
+                    // Restore saved variables
+                    if (savedEnv != null) {
+                        for (Map.Entry<String, Object> entry : savedVariables.entrySet()) {
+                            savedEnv.set(entry.getKey(), entry.getValue());
+                        }
+                    }
+                    
+                    return result;
                 }
-                
+
                 // Pattern didn't match - restore environment and try next branch
                 if (savedEnv != null) {
-                    frame.setObject(VariableEnvironment.SLOT_INDEX, savedEnv);
+                    // Clear variables added in this branch and restore saved ones
+                    savedEnv.getLocalVariables().clear();
+                    for (Map.Entry<String, Object> entry : savedVariables.entrySet()) {
+                        savedEnv.set(entry.getKey(), entry.getValue());
+                    }
                 }
             }
         }
