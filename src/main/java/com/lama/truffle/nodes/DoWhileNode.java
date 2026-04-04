@@ -6,40 +6,23 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 /**
  * Node for do-while expressions.
  * Evaluates condition after each iteration (body executes at least once).
+ * Both body and condition execute in a child scope.
  */
 public class DoWhileNode extends ExpressionNode {
 
-    @Child private ExpressionNode body;
-    @Child private ExpressionNode condition;
+    @Child private ExpressionNode loopScope;  // ScopeEnterNode wrapping DoWhileLoopBodyNode
 
-    public DoWhileNode(ExpressionNode body, ExpressionNode condition) {
-        this.body = body;
-        this.condition = condition;
+    public DoWhileNode(ExpressionNode loopScope) {
+        this.loopScope = loopScope;
     }
 
     @Specialization
     protected Object doDoWhile(VirtualFrame frame) {
-        Object lastResult = 0;
-
-        do {
-            lastResult = body.execute(frame);
-            Object conditionValue = condition.execute(frame);
-            long cond = conditionValue instanceof Number ? ((Number) conditionValue).longValue() : 0;
-
-            if (cond == 0) { // Zero is false
-                break;
-            }
-        } while (true);
-
-        return lastResult;
+        return loopScope.execute(frame);
     }
 
-    public ExpressionNode getBody() {
-        return body;
-    }
-
-    public ExpressionNode getCondition() {
-        return condition;
+    public ExpressionNode getLoopScope() {
+        return loopScope;
     }
 
     @Override

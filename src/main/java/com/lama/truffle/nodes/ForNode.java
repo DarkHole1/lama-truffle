@@ -1,54 +1,34 @@
 package com.lama.truffle.nodes;
 
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 /**
  * Node for for expressions.
  * Syntax: for init, condition, update do body od
- * The init is executed once, then condition is checked before each iteration,
- * and update is executed after each iteration.
+ * The init is executed once in the parent scope, then a child scope is created
+ * for the loop (condition, update, body all run in the child scope).
  */
 public class ForNode extends ExpressionNode {
 
     @Child private ExpressionNode init;
-    @Child private ExpressionNode condition;
-    @Child private ExpressionNode update;
-    @Child private ExpressionNode body;
+    @Child private ExpressionNode loopScope;  // ScopeEnterNode wrapping ForLoopBodyNode
 
-    public ForNode(ExpressionNode init, ExpressionNode condition,
-                   ExpressionNode update, ExpressionNode body) {
+    public ForNode(ExpressionNode init, ExpressionNode loopScope) {
         this.init = init;
-        this.condition = condition;
-        this.update = update;
-        this.body = body;
+        this.loopScope = loopScope;
     }
 
-    @Specialization
-    protected Object doFor(VirtualFrame frame) {
+    @Override
+    public Object execute(VirtualFrame frame) {
         Object lastResult = 0;
 
-        // Execute initialization once
+        // Execute initialization once in the parent scope
         if (init != null) {
             init.execute(frame);
         }
 
-        // Loop while condition is true (non-zero)
-        while (true) {
-            Object conditionValue = condition.execute(frame);
-            long cond = conditionValue instanceof Number ? ((Number) conditionValue).longValue() : 0;
-
-            if (cond == 0) { // Zero is false
-                break;
-            }
-
-            lastResult = body.execute(frame);
-
-            // Execute update after each iteration
-            if (update != null) {
-                update.execute(frame);
-            }
-        }
+        // Execute the loop in the child scope
+        lastResult = loopScope.execute(frame);
 
         return lastResult;
     }
@@ -57,20 +37,7 @@ public class ForNode extends ExpressionNode {
         return init;
     }
 
-    public ExpressionNode getCondition() {
-        return condition;
-    }
-
-    public ExpressionNode getUpdate() {
-        return update;
-    }
-
-    public ExpressionNode getBody() {
-        return body;
-    }
-
-    @Override
-    public Object execute(VirtualFrame frame) {
-        return doFor(frame);
+    public ExpressionNode getLoopScope() {
+        return loopScope;
     }
 }

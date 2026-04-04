@@ -23,9 +23,10 @@ public class App {
         // CharStream stream = CharStreams.fromFileName(args[0]);
         CharStream stream = CharStreams.fromFileName("./Sort.lama");
         LamaParser parser = new LamaParser(new CommonTokenStream(new LamaLexer(stream)));
-        ExpressionNode node = parser.compilationUnit().accept(new LamaVisitorImpl());
+        LamaVisitorImpl visitor = new LamaVisitorImpl();
+        ExpressionNode node = parser.compilationUnit().accept(visitor);
 
-        LamaRootNode rootNode = new LamaRootNode(node);
+        LamaRootNode rootNode = new LamaRootNode(node, visitor.getRootFrameDescriptor());
         CallTarget callTarget = rootNode.getCallTarget();
         
         Object result = callTarget.call();

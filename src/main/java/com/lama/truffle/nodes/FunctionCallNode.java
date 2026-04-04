@@ -33,4 +33,8 @@ public class FunctionCallNode extends ExpressionNode {
     public ExpressionNode getFunctionNode() {
         return functionNode;
     }
+
+    public ExpressionNode[] getArgumentNodes() {
+        return argumentNodes;
+    }
 }

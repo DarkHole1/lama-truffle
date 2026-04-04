@@ -1,6 +1,6 @@
 package com.lama.truffle.nodes;
 
-import com.lama.truffle.LamaContext;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
@@ -13,15 +13,15 @@ public class LamaRootNode extends RootNode {
     @Child
     private ExpressionNode body;
 
-    public LamaRootNode(ExpressionNode body) {
-        super(null);
+    public LamaRootNode(ExpressionNode body, FrameDescriptor descriptor) {
+        super(null, descriptor);
         this.body = body;
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
-        // Initialize the environment in the frame
-        VariableEnvironment.getOrCreate(frame);
+        // Store null parent in slot 0 (root scope has no parent)
+        frame.setObject(com.lama.truffle.runtime.Scope.getParentSlot(), null);
         return body.execute(frame);
     }
 }
