@@ -1,9 +1,9 @@
 package com.lama.truffle.types;
 
 import com.lama.truffle.nodes.ExpressionNode;
+import com.lama.truffle.runtime.CapturedVariable;
 import com.lama.truffle.runtime.FrameExecutorRootNode;
 import com.lama.truffle.runtime.Scope;
-import com.lama.truffle.runtime.VariableLookup;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -51,43 +51,42 @@ public final class Closure {
      * Walks up the parent chain via slot 0 to find which frames need capturing.
      *
      * @param currentFrame the current execution frame
-     * @param maxDepth the maximum depth of variable access (how many parent traversals)
-     * @return array of captured frames, or empty array if nothing needs capturing
+     * @param capturedVariables static info about which variables are captured
+     * @return array of captured frames
      */
-    public static VirtualFrame[] buildCapturedFrames(VirtualFrame currentFrame, int maxDepth) {
-        if (maxDepth <= 0) {
+    public static VirtualFrame[] buildCapturedFrames(VirtualFrame currentFrame,
+                                                      CapturedVariable[] capturedVariables) {
+        if (capturedVariables.length == 0) {
             return new VirtualFrame[0];
         }
 
-        // Collect frames that need capturing (from immediate parent up to maxDepth)
+        // Find the max depth needed
+        int maxDepth = 0;
+        for (CapturedVariable cv : capturedVariables) {
+            if (cv.depth() > maxDepth) {
+                maxDepth = cv.depth();
+            }
+        }
+
+        // Walk up the parent chain
         List<VirtualFrame> frames = new ArrayList<>();
         VirtualFrame current = currentFrame;
 
         for (int d = 0; d < maxDepth; d++) {
-            Object parentObj = current.getObject(Scope.getParentSlot());
-            if (parentObj == null) break;
-            current = (VirtualFrame) parentObj;
+            current = (VirtualFrame) current.getObject(Scope.getParentSlot(current));
             frames.add(current);
         }
 
-        return frames.toArray(new VirtualFrame[0]);
-    }
-
-    /**
-     * Marks all provided VariableLookups as captured with indices into the captured frames array.
-     *
-     * @param lookups list of VariableLookups to mark
-     * @param capturedFrames the captured frames array
-     */
-    public static void markCapturedLookups(List<VariableLookup> lookups, VirtualFrame[] capturedFrames) {
-        for (VariableLookup lookup : lookups) {
-            if (lookup.getDepth() > 0) {
-                int frameIndex = lookup.getDepth() - 1;
-                if (frameIndex >= 0 && frameIndex < capturedFrames.length) {
-                    lookup.markCaptured(frameIndex, capturedFrames);
-                }
+        // Map each captured variable to its frame
+        VirtualFrame[] result = new VirtualFrame[capturedVariables.length];
+        for (int i = 0; i < capturedVariables.length; i++) {
+            int frameIndex = capturedVariables[i].depth() - 1;
+            if (frameIndex >= 0 && frameIndex < frames.size()) {
+                result[i] = frames.get(frameIndex);
             }
         }
+
+        return result;
     }
 
     /**
@@ -105,6 +104,7 @@ public final class Closure {
     /**
      * Executes this closure with the given frame and arguments.
      * Creates a new frame for the function body with the captured frame as parent.
+     * Stores captured frames in slot 1 (CAPTURED_FRAMES_SLOT) of the new frame.
      */
     public Object execute(VirtualFrame frame, Object[] arguments) {
         // Determine the parent frame for the new frame
@@ -115,10 +115,11 @@ public final class Closure {
             parentFrame = frame;
         }
 
-        // Prepare arguments: [parentFrame, arg0, arg1, ...]
-        Object[] callArgs = new Object[arguments.length + 1];
+        // Prepare arguments: [parentFrame, capturedFramesArray, arg0, arg1, ...]
+        Object[] callArgs = new Object[arguments.length + 2];
         callArgs[0] = parentFrame;
-        System.arraycopy(arguments, 0, callArgs, 1, arguments.length);
+        callArgs[1] = capturedFrames;
+        System.arraycopy(arguments, 0, callArgs, 2, arguments.length);
 
         return getCallTarget().call(callArgs);
     }

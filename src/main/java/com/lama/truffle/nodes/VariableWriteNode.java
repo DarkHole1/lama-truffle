@@ -18,8 +18,10 @@ public class VariableWriteNode extends ExpressionNode {
     @Override
     public Object execute(VirtualFrame frame) {
         Object value = valueNode.execute(frame);
-        if (lookup.isCaptured()) {
-            lookup.writeCaptured(frame, value);
+        int ci = lookup.getCaptureIndex();
+        if (ci >= 0) {
+            VirtualFrame[] capturedFrames = (VirtualFrame[]) frame.getObject(com.lama.truffle.runtime.Scope.CAPTURED_FRAMES_SLOT);
+            capturedFrames[ci].setObject(lookup.getSlot(), value);
         } else {
             lookup.write(frame, value);
         }

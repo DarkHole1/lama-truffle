@@ -6,17 +6,18 @@ import com.oracle.truffle.api.frame.VirtualFrame;
  * Utility class that encapsulates how to find and access a variable at runtime.
  * Created by Scope during AST building, used by VariableAccessNode and VariableWriteNode.
  * 
- * For normal access: traverses parent frames via slot 0 references.
- * For captured access: indexes into a shared captured-frames array.
+ * For normal access: traverses parent frames via the parent slot from frame descriptor info.
+ * Captured access: uses the captureIndex to index into the captured frames array
+ * stored in the captured frames slot of the current frame.
  */
 public final class VariableLookup {
 
     private final int depth;   // number of parent traversals to reach target frame
     private final int slot;    // local slot index in the target frame
 
-    // Capture support
-    private int captureListIndex = -1;           // -1 means not captured
-    private VirtualFrame[] capturedFrames;       // shared array of captured frames
+    // Mutable capture index, set during function capture collection at AST build time.
+    // -1 means this variable is not captured (accessed via normal parent traversal).
+    private int captureIndex = -1;
 
     public VariableLookup(int depth, int slot) {
         this.depth = depth;
@@ -24,56 +25,31 @@ public final class VariableLookup {
     }
 
     /**
-     * Normal read: traverse parent chain via slot 0 references.
+     * Normal read: traverse parent chain via the parent slot from frame descriptor info.
      */
     public Object read(VirtualFrame frame) {
-        VirtualFrame current = frame;
-        for (int i = 0; i < depth; i++) {
-            current = (VirtualFrame) current.getObject(Scope.getParentSlot());
-        }
-        return current.getObject(slot);
+        VirtualFrame target = Scope.getParentFrame(frame, depth);
+        return target.getObject(slot);
     }
 
     /**
-     * Captured read: use the captured frames array.
-     */
-    public Object readCaptured(VirtualFrame frame) {
-        return capturedFrames[captureListIndex].getObject(slot);
-    }
-
-    /**
-     * Normal write: traverse parent chain via slot 0 references.
+     * Normal write: traverse parent chain via the parent slot from frame descriptor info.
      */
     public void write(VirtualFrame frame, Object value) {
-        VirtualFrame current = frame;
-        for (int i = 0; i < depth; i++) {
-            current = (VirtualFrame) current.getObject(Scope.getParentSlot());
-        }
-        current.setObject(slot, value);
+        VirtualFrame target = Scope.getParentFrame(frame, depth);
+        target.setObject(slot, value);
     }
 
     /**
-     * Captured write: use the captured frames array.
+     * Sets the capture index for this lookup.
+     * Called during function capture collection at AST build time.
      */
-    public void writeCaptured(VirtualFrame frame, Object value) {
-        capturedFrames[captureListIndex].setObject(slot, value);
+    public void setCaptureIndex(int index) {
+        this.captureIndex = index;
     }
 
-    /**
-     * Called during closure creation to set up capture information.
-     * @param listIndex index into the captured frames array
-     * @param frames the shared captured frames array
-     */
-    public void markCaptured(int listIndex, VirtualFrame[] frames) {
-        this.captureListIndex = listIndex;
-        this.capturedFrames = frames;
-    }
-
-    /**
-     * Returns true if this variable has been marked as captured.
-     */
-    public boolean isCaptured() {
-        return captureListIndex >= 0;
+    public int getCaptureIndex() {
+        return captureIndex;
     }
 
     public int getDepth() {

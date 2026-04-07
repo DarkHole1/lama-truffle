@@ -2,9 +2,13 @@ package com.lama.truffle.parser;
 
 import com.lama.truffle.nodes.*;
 import com.lama.truffle.parser.LamaParser.*;
+import com.lama.truffle.runtime.CapturedVariable;
 import com.lama.truffle.runtime.Scope;
 import com.lama.truffle.runtime.VariableLookup;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.lama.truffle.nodes.BinaryOperationNode.BinaryOperator.*;
 
@@ -21,7 +25,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     public ExpressionNode visitCompilationUnit(LamaParser.CompilationUnitContext ctx) {
         currentScope = new Scope();  // root scope
         if (ctx.scopeExpression() != null) {
-            ExpressionNode body = visit(ctx.scopeExpression());
+            ExpressionNode body = visitScopeExpression(ctx.scopeExpression());
             rootFrameDescriptor = currentScope.getBuilder().build();
             return body;
         }
@@ -37,7 +41,21 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         currentScope = childScope;
 
         try {
-            // Collect all definitions
+            // Pass 1: collect all definition names and allocate slots
+            for (DefinitionContext defCtx : ctx.definition()) {
+                if (defCtx.variableDefinition() != null) {
+                    VariableDefinitionSequenceContext seq = defCtx.variableDefinition().variableDefinitionSequence();
+                    for (VariableDefinitionItemContext itemCtx : seq.variableDefinitionItem()) {
+                        String varName = itemCtx.LIDENT().getText();
+                        childScope.allocateVariable(varName);
+                    }
+                } else if (defCtx.functionDefinition() != null) {
+                    String funcName = defCtx.functionDefinition().LIDENT().getText();
+                    childScope.allocateVariable(funcName);
+                }
+            }
+
+            // Pass 2: visit definitions (values/bodies can reference forward defs)
             DefinitionNode[] definitions = new DefinitionNode[0];
             if (ctx.definition().size() > 0) {
                 definitions = new DefinitionNode[ctx.definition().size()];
@@ -81,11 +99,13 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     public ExpressionNode visitVariableDefinitionItem(LamaParser.VariableDefinitionItemContext ctx) {
         String varName = ctx.LIDENT().getText();
+        // Slot already allocated in pass 1
+        int slot = currentScope.lookupVariable(varName).getSlot();
+
         ExpressionNode valueNode = null;
         if (ctx.basicExpression() != null) {
             valueNode = visit(ctx.basicExpression());
         }
-        int slot = currentScope.allocateVariable(varName);
         return new VariableDefinitionNode(varName, slot, valueNode);
     }
 
@@ -116,6 +136,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             if (lookup == null) {
                 throw new RuntimeException("Undefined variable: " + varName);
             }
+            // captureIndex will be assigned by the enclosing function scope
             ExpressionNode right = visit(ctx.assignmentExpr());
             return new VariableWriteNode(varName, lookup, right);
         } else {
@@ -296,8 +317,8 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 }
             }
 
-            // Create child scope for function body
-            Scope functionScope = new Scope(currentScope);
+            // Create function scope (with captured frames slot)
+            Scope functionScope = Scope.createFunctionScope(currentScope);
             Scope previousScope = currentScope;
             currentScope = functionScope;
 
@@ -310,7 +331,11 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
                 ExpressionNode body = visit(ctx.functionBody());
                 FrameDescriptor descriptor = functionScope.getBuilder().build();
-                return new FunctionNode(paramNames, paramSlots, descriptor, body);
+
+                // Collect captured variables statically
+                CapturedVariable[] capturedVars = collectCapturedVariables(body, functionScope);
+
+                return new FunctionNode(paramNames, paramSlots, descriptor, body, capturedVars);
             } finally {
                 currentScope = previousScope;
             }
@@ -355,10 +380,8 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             LamaParser.ElsePartContext elseCtx = ctx.elsePart();
             while (elseCtx != null) {
                 if (elseCtx.ELIF() != null) {
-                    // Elif condition in parent scope
                     elifConditions.add(visit(elseCtx.expression()));
 
-                    // Elif body in child scope
                     Scope elifScope = new Scope(currentScope);
                     previousScope = currentScope;
                     currentScope = elifScope;
@@ -367,7 +390,6 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     currentScope = previousScope;
                     elifBranches.add(new ScopeEnterNode(elifDescriptor, elifBody));
                 } else if (elseCtx.ELSE() != null) {
-                    // Else body in child scope
                     Scope elseScope = new Scope(currentScope);
                     previousScope = currentScope;
                     currentScope = elseScope;
@@ -396,7 +418,6 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     public ExpressionNode visitWhileDoExpression(LamaParser.WhileDoExpressionContext ctx) {
         ExpressionNode condition = visit(ctx.expression());
 
-        // Body in child scope
         Scope bodyScope = new Scope(currentScope);
         Scope previousScope = currentScope;
         currentScope = bodyScope;
@@ -410,7 +431,6 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     @Override
     public ExpressionNode visitDoWhileExpression(LamaParser.DoWhileExpressionContext ctx) {
-        // Body and condition in child scope
         Scope bodyScope = new Scope(currentScope);
         Scope previousScope = currentScope;
         currentScope = bodyScope;
@@ -568,7 +588,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     public ExpressionNode visitCaseExpression(LamaParser.CaseExpressionContext ctx) {
         ExpressionNode scrutinee = visit(ctx.expression());
 
-        // Create child scope for case branches (all pattern variables allocated here)
+        // Create child scope for case branches
         Scope caseScope = new Scope(currentScope);
         Scope previousScope = currentScope;
         currentScope = caseScope;
@@ -602,6 +622,8 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     public ExpressionNode visitFunctionDefinition(LamaParser.FunctionDefinitionContext ctx) {
         String functionName = ctx.LIDENT().getText();
+        // Slot already allocated in pass 1
+        int funcSlot = currentScope.lookupVariable(functionName).getSlot();
 
         String[] paramNames = new String[0];
         if (ctx.functionArguments().LIDENT().size() > 0) {
@@ -611,8 +633,8 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             }
         }
 
-        // Create child scope for function body
-        Scope functionScope = new Scope(currentScope);
+        // Create function scope
+        Scope functionScope = Scope.createFunctionScope(currentScope);
         Scope previousScope = currentScope;
         currentScope = functionScope;
 
@@ -625,7 +647,12 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
             ExpressionNode body = visit(ctx.functionBody());
             FrameDescriptor descriptor = functionScope.getBuilder().build();
-            return new FunctionDefinitionNode(functionName, paramNames, paramSlots, descriptor, body);
+
+            // Collect captured variables statically
+            CapturedVariable[] capturedVars = collectCapturedVariables(body, functionScope);
+
+            return new FunctionDefinitionNode(functionName, paramNames, paramSlots,
+                    descriptor, body, capturedVars, funcSlot);
         } finally {
             currentScope = previousScope;
         }
@@ -642,6 +669,126 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     @Override
     public ExpressionNode visitFunctionArguments(LamaParser.FunctionArgumentsContext ctx) {
         return new IntegerLiteralNode(0);
+    }
+
+    // ========== Static Capture Collection ==========
+
+    /**
+     * Collects all CapturedVariables from a function body.
+     * Walks the AST and finds all VariableAccessNode/VariableWriteNode that access
+     * outer scopes (depth > 0). Assigns unique capture indices to their lookups.
+     */
+    private CapturedVariable[] collectCapturedVariables(ExpressionNode body, Scope functionScope) {
+        List<VariableLookup> captures = new ArrayList<>();
+        collectCaptures(body, captures, functionScope);
+
+        if (captures.isEmpty()) {
+            return new CapturedVariable[0];
+        }
+
+        // Deduplicate lookups by (depth, slot), assign capture indices
+        java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<>();
+        List<CapturedVariable> result = new ArrayList<>();
+        for (VariableLookup lookup : captures) {
+            String key = lookup.getDepth() + ":" + lookup.getSlot();
+            if (seen.add(key)) {
+                int index = result.size();
+                lookup.setCaptureIndex(index);
+                result.add(new CapturedVariable(lookup.getDepth(), lookup.getSlot()));
+            }
+        }
+
+        return result.toArray(new CapturedVariable[0]);
+    }
+
+    private void collectCaptures(ExpressionNode node, List<VariableLookup> captures, Scope functionScope) {
+        if (node == null) return;
+
+        if (node instanceof VariableAccessNode) {
+            VariableAccessNode van = (VariableAccessNode) node;
+            VariableLookup lookup = van.getLookup();
+            if (lookup.getDepth() > 0) {
+                captures.add(lookup);
+            }
+        } else if (node instanceof VariableWriteNode) {
+            VariableWriteNode vwn = (VariableWriteNode) node;
+            VariableLookup lookup = vwn.getLookup();
+            if (lookup.getDepth() > 0) {
+                captures.add(lookup);
+            }
+            collectCaptures(vwn.getValueNode(), captures, functionScope);
+        } else if (node instanceof ScopeNode) {
+            ScopeNode sn = (ScopeNode) node;
+            for (DefinitionNode def : sn.getDefinitions()) {
+                collectCapturesFromDef(def, captures, functionScope);
+            }
+            collectCaptures(sn.getExpression(), captures, functionScope);
+        } else if (node instanceof ScopeEnterNode) {
+            ScopeEnterNode sen = (ScopeEnterNode) node;
+            collectCaptures(sen.getBody(), captures, functionScope);
+        } else if (node instanceof IfNode) {
+            IfNode ifn = (IfNode) node;
+            collectCaptures(ifn.getCondition(), captures, functionScope);
+            collectCaptures(ifn.getThenBranch(), captures, functionScope);
+            for (ExpressionNode cond : ifn.getElifConditions()) {
+                collectCaptures(cond, captures, functionScope);
+            }
+            for (ExpressionNode branch : ifn.getElifBranches()) {
+                collectCaptures(branch, captures, functionScope);
+            }
+            collectCaptures(ifn.getElseBranch(), captures, functionScope);
+        } else if (node instanceof ForNode) {
+            ForNode fn = (ForNode) node;
+            collectCaptures(fn.getInit(), captures, functionScope);
+            collectCaptures(fn.getLoopScope(), captures, functionScope);
+        } else if (node instanceof WhileNode) {
+            WhileNode wn = (WhileNode) node;
+            collectCaptures(wn.getLoopScope(), captures, functionScope);
+        } else if (node instanceof DoWhileNode) {
+            DoWhileNode dwn = (DoWhileNode) node;
+            collectCaptures(dwn.getLoopScope(), captures, functionScope);
+        } else if (node instanceof CaseNode) {
+            CaseNode cn = (CaseNode) node;
+            collectCaptures(cn.getScrutinee(), captures, functionScope);
+            for (ExpressionNode branch : cn.getBranches()) {
+                if (branch instanceof CaseBranchNode) {
+                    CaseBranchNode cbn = (CaseBranchNode) branch;
+                    collectCaptures(cbn.getBody(), captures, functionScope);
+                }
+            }
+        } else if (node instanceof FunctionCallNode) {
+            FunctionCallNode fcn = (FunctionCallNode) node;
+            collectCaptures(fcn.getFunctionNode(), captures, functionScope);
+            for (ExpressionNode arg : fcn.getArgumentNodes()) {
+                collectCaptures(arg, captures, functionScope);
+            }
+        } else if (node instanceof ForLoopBodyNode) {
+            ForLoopBodyNode flbn = (ForLoopBodyNode) node;
+            collectCaptures(flbn.getCondition(), captures, functionScope);
+            collectCaptures(flbn.getUpdate(), captures, functionScope);
+            collectCaptures(flbn.getBody(), captures, functionScope);
+        } else if (node instanceof WhileLoopBodyNode) {
+            WhileLoopBodyNode wlbn = (WhileLoopBodyNode) node;
+            collectCaptures(wlbn.getCondition(), captures, functionScope);
+            collectCaptures(wlbn.getBody(), captures, functionScope);
+        } else if (node instanceof DoWhileLoopBodyNode) {
+            DoWhileLoopBodyNode dwlbn = (DoWhileLoopBodyNode) node;
+            collectCaptures(dwlbn.getBody(), captures, functionScope);
+            collectCaptures(dwlbn.getCondition(), captures, functionScope);
+        } else if (node instanceof FunctionNode) {
+            // Nested function - its captures are separate, don't traverse into it
+        } else if (node instanceof FunctionDefinitionNode) {
+            // Nested function def - don't traverse into it
+        }
+        // Other nodes (literals, BinaryOperation, etc.) don't have variable access
+    }
+
+    private void collectCapturesFromDef(DefinitionNode def, List<VariableLookup> captures, Scope functionScope) {
+        if (def instanceof VariableDefinitionNode) {
+            VariableDefinitionNode vdn = (VariableDefinitionNode) def;
+            collectCaptures(vdn.getValueNode(), captures, functionScope);
+        }
+        // FunctionDefinitionNode: don't traverse into nested functions
     }
 
     private BinaryOperationNode.BinaryOperator fromComparisonOperator(String opText) {
