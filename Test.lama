@@ -1,0 +1,8 @@
+fun test () {
+    var a = 1338;
+    fun tot () {
+        a
+    }
+    tot
+}
+test () ()

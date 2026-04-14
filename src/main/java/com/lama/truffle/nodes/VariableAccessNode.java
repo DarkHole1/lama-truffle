@@ -15,11 +15,6 @@ public class VariableAccessNode extends ExpressionNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        int ci = lookup.getCaptureIndex();
-        if (ci >= 0) {
-            VirtualFrame[] capturedFrames = (VirtualFrame[]) frame.getObject(com.lama.truffle.runtime.Scope.CAPTURED_FRAMES_SLOT);
-            return capturedFrames[ci].getObject(lookup.getSlot());
-        }
         return lookup.read(frame);
     }
 

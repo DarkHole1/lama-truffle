@@ -10,74 +10,67 @@ import java.util.Map;
 /**
  * Utility class for tracking variables and allocating frame slots during AST building.
  * Not an AST node - used purely at parse/build time.
- * 
+ *
+ * Each function gets one FrameDescriptor built from a single shared FrameDescriptor.Builder.
+ * Nested block scopes (let, if, while, etc.) reuse the same builder.
+ * Closures create their own builder (and thus their own FrameDescriptor).
+ *
+ * Parent frame access is done via frame.getArguments()[0] at runtime.
  * Frame layout:
- *   Slot 0: parent frame reference ($parent)
- *   Slot 1: captured frames array ($captured) - only in function scopes
- *   Slot 2+: local variables
- * 
- * The parent slot index is stored in the FrameDescriptor's info field,
- * accessible at runtime via frame.getFrameDescriptor().getInfo().
+ *   Slot 0+: local variables / parameters
  */
 public class Scope {
-
-    private static final String PARENT_SLOT_NAME = "$parent";
-    private static final String CAPTURED_SLOT_NAME = "$captured";
-
-    public static final int PARENT_SLOT = 0;
-    public static final int CAPTURED_FRAMES_SLOT = 1;
 
     private final Scope parent;
     private final FrameDescriptor.Builder builder;
     private final Map<String, Integer> variables;
-    private final boolean isFunctionScope;
     private int nextSlot;
 
     /**
-     * Creates a root scope with no parent.
+     * Creates a root scope with no parent and a new builder.
      */
     public Scope() {
         this.parent = null;
         this.builder = FrameDescriptor.newBuilder();
-        this.builder.addSlot(FrameSlotKind.Object, PARENT_SLOT_NAME, null);
-        this.builder.info(PARENT_SLOT);
         this.variables = new HashMap<>();
-        this.isFunctionScope = false;
-        this.nextSlot = 1;
+        this.nextSlot = 0;
     }
 
     /**
-     * Creates a child scope with the given parent.
+     * Creates a child scope that shares the parent's FrameDescriptor.Builder.
+     * Used for nested blocks (let, if, while, for, case, etc.).
      */
     public Scope(Scope parent) {
-        this(parent, false);
+        this(parent, parent.builder);
     }
 
     /**
-     * Creates a child scope, optionally reserving slot 1 for captured frames array.
-     */
-    private Scope(Scope parent, boolean isFunctionScope) {
-        this.parent = parent;
-        this.builder = FrameDescriptor.newBuilder();
-        this.builder.addSlot(FrameSlotKind.Object, PARENT_SLOT_NAME, null);
-        this.builder.info(PARENT_SLOT);
-        this.isFunctionScope = isFunctionScope;
-
-        if (isFunctionScope) {
-            this.builder.addSlot(FrameSlotKind.Object, CAPTURED_SLOT_NAME, null);
-            this.nextSlot = 2;
-        } else {
-            this.nextSlot = 1;
-        }
-
-        this.variables = new HashMap<>();
-    }
-
-    /**
-     * Creates a function scope with slot 1 reserved for captured frames array.
+     * Creates a function scope with its own FrameDescriptor.Builder.
+     * Used for function definitions and closures.
      */
     public static Scope createFunctionScope(Scope parent) {
-        return new Scope(parent, true);
+        return new Scope(parent, FrameDescriptor.newBuilder());
+    }
+
+    /**
+     * Creates a child scope with a new builder (for closures).
+     */
+    public static Scope createClosureScope(Scope parent) {
+        return new Scope(parent, FrameDescriptor.newBuilder());
+    }
+
+    private Scope(Scope parent, FrameDescriptor.Builder builder) {
+        this.parent = parent;
+        this.builder = builder;
+        this.variables = new HashMap<>();
+
+        // If this scope has its own builder (function/closure scope),
+        // start slot numbering from 0. Otherwise reuse parent's slot counter.
+        if (builder != parent.builder) {
+            this.nextSlot = 0;
+        } else {
+            this.nextSlot = parent.nextSlot;
+        }
     }
 
     /**
@@ -97,6 +90,10 @@ public class Scope {
      * Looks up a variable in the scope chain.
      * Returns a VariableLookup that encapsulates the runtime access pattern.
      * Returns null if the variable is not found.
+     *
+     * If the parent scope shares the same builder (nested block), depth stays 0
+     * since they share the same frame at runtime.
+     * If the parent scope has a different builder (function/closure), depth increases.
      */
     public VariableLookup lookupVariable(String name) {
         return lookupVariable(name, 0);
@@ -107,7 +104,9 @@ public class Scope {
             return new VariableLookup(currentDepth, variables.get(name));
         }
         if (parent != null) {
-            return parent.lookupVariable(name, currentDepth + 1);
+            // If parent shares the same builder, use depth 0 (same frame)
+            int nextDepth = (parent.builder == this.builder) ? 0 : currentDepth + 1;
+            return parent.lookupVariable(name, nextDepth);
         }
         return null;
     }
@@ -127,32 +126,10 @@ public class Scope {
     }
 
     /**
-     * Returns whether this is a function scope (has captured frames slot).
+     * Returns the next available slot index.
      */
-    public boolean isFunctionScope() {
-        return isFunctionScope;
-    }
-
-    // ========== Static helpers for runtime access ==========
-
-    /**
-     * Gets the parent slot index from a frame's descriptor info.
-     */
-    public static int getParentSlot(VirtualFrame frame) {
-        return (int) frame.getFrameDescriptor().getInfo();
-    }
-
-    /**
-     * Traverses up the parent chain by the given depth and returns the target frame.
-     */
-    public static VirtualFrame getParentFrame(VirtualFrame frame, int depth) {
-        VirtualFrame current = frame;
-        int parentSlot = getParentSlot(current);
-        for (int i = 0; i < depth; i++) {
-            current = (VirtualFrame) current.getObject(parentSlot);
-            parentSlot = getParentSlot(current);
-        }
-        return current;
+    public int getNextSlot() {
+        return nextSlot;
     }
 
     /**
@@ -166,5 +143,19 @@ public class Scope {
             return parent.hasVariable(name);
         }
         return false;
+    }
+
+    // ========== Static helpers for runtime access ==========
+
+    /**
+     * Traverses up the parent frame chain via frame arguments.
+     * Parent frame is always at getArguments()[0].
+     */
+    public static VirtualFrame getParentFrame(VirtualFrame frame, int depth) {
+        VirtualFrame current = frame;
+        for (int i = 0; i < depth; i++) {
+            current = (VirtualFrame) current.getArguments()[0];
+        }
+        return current;
     }
 }

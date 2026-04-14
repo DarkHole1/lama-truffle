@@ -29,9 +29,6 @@ public class LamaRootNode extends RootNode {
             LamaContext.setCurrentContext(context);
         }
 
-        // Store null parent in slot 0 (root scope has no parent)
-        int parentSlot = com.lama.truffle.runtime.Scope.getParentSlot(frame);
-        frame.setObject(parentSlot, null);
         return body.execute(frame);
     }
 }

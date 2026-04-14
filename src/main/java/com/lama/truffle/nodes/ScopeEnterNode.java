@@ -1,7 +1,6 @@
 package com.lama.truffle.nodes;
 
 import com.lama.truffle.runtime.FrameExecutorRootNode;
-import com.lama.truffle.runtime.Scope;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -10,8 +9,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 /**
  * AST node that creates a new frame for its body expression.
  * Used for scope-creating constructs (let-in, loops, if branches, etc.).
- * 
+ *
  * The CallTarget is created lazily on first execution.
+ * The current frame is passed as arguments[0] for parent frame access.
  */
 public class ScopeEnterNode extends ExpressionNode {
 
@@ -37,7 +37,7 @@ public class ScopeEnterNode extends ExpressionNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        // Pass current frame as parent (first argument)
+        // Pass current frame as parent (first argument) for variable lookup
         return getCallTarget().call(new Object[]{frame});
     }
 

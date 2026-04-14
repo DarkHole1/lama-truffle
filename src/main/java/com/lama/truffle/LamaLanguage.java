@@ -36,12 +36,9 @@ public final class LamaLanguage extends TruffleLanguage<LamaContext> {
 
     @Override
     protected void initializeContext(LamaContext context) {
-        context.initializeBuiltins();
     }
 
     protected boolean isObjectOfLanguage(Object object) {
-        // Check if the object is a Lama-specific type
-        // For now, we don't have any special types that need to be identified
         return false;
     }
 }

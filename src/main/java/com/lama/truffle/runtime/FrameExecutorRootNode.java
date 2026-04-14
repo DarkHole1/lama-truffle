@@ -8,12 +8,11 @@ import com.oracle.truffle.api.nodes.RootNode;
 /**
  * Generic RootNode that executes an expression body in a new frame.
  * Used by ScopeEnterNode and closures to create child frames.
- * 
- * Slot 0: parent frame reference
- * Slot 1: captured frames array (VirtualFrame[]) - for function scopes
- * Slot 2+: local variables / parameters
- * 
- * Arguments layout: [parentFrame, capturedFramesArray?, arg0, arg1, ...]
+ *
+ * Slot 0+: local variables / parameters
+ *
+ * Arguments layout: [parentFrame, arg0, arg1, ...]
+ * Parent frame is accessed via getArguments()[0] at runtime for cross-builder variable lookups.
  */
 public class FrameExecutorRootNode extends RootNode {
 
@@ -41,21 +40,10 @@ public class FrameExecutorRootNode extends RootNode {
         Object[] args = frame.getArguments();
         if (args == null) args = new Object[0];
 
-        // First argument is the lexical parent frame
-        if (args.length > 0) {
-            int parentSlot = Scope.getParentSlot(frame);
-            frame.setObject(parentSlot, args[0]);
-        }
-
-        // Second argument is the captured frames array (only for function scopes)
-        if (args.length > 1 && parameterSlots != null) {
-            frame.setObject(Scope.CAPTURED_FRAMES_SLOT, args[1]);
-        }
-
-        // Bind parameters if this is a function scope (arguments start at index 2)
+        // Bind parameters if this is a function scope (arguments start at index 1)
         if (parameterSlots != null) {
-            for (int i = 0; i < parameterSlots.length && i < args.length - 2; i++) {
-                frame.setObject(parameterSlots[i], args[i + 2]);
+            for (int i = 0; i < parameterSlots.length && i < args.length - 1; i++) {
+                frame.setObject(parameterSlots[i], args[i + 1]);
             }
         }
 

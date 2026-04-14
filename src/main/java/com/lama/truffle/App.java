@@ -21,7 +21,8 @@ public class App {
         // }
         
         // CharStream stream = CharStreams.fromFileName(args[0]);
-        CharStream stream = CharStreams.fromFileName("./Sort.lama");
+        // CharStream stream = CharStreams.fromFileName("./Sort.lama");
+        CharStream stream = CharStreams.fromFileName("./Test.lama");
         LamaParser parser = new LamaParser(new CommonTokenStream(new LamaLexer(stream)));
         LamaVisitorImpl visitor = new LamaVisitorImpl();
         ExpressionNode node = parser.compilationUnit().accept(visitor);
