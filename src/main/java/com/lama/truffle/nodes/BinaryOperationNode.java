@@ -72,7 +72,7 @@ public abstract class BinaryOperationNode extends ExpressionNode {
             case MODULO:
                 return left % right;
             case EQUAL:
-                return left == right ? 1 : 0; // Return 1 for true, 0 for false
+                return left == right ? 1 : 0;
             case NOT_EQUAL:
                 return left != right ? 1 : 0;
             case LESS:

@@ -8,7 +8,7 @@ fun bubbleSort (l) {
       x : z@(y : tl) ->
        if compare (x, y) > 0
        then [true, y : inner (x : tl) [1]]
-       else case inner (z) of {} -> [f, x : z] esac
+       else case inner (z) of [f, z] -> [f, x : z] esac
        fi
     | _ -> [false, l]
     esac

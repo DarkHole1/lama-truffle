@@ -15,14 +15,12 @@ import com.oracle.truffle.api.CallTarget;
 public class App {
 
     public static void main(String[] args) throws IOException {
-        // if (args.length <= 0) {
-        //     System.out.println("Usage: lama-truffle FILE.lama");
-        //     System.exit(1);
-        // }
+        if (args.length <= 0) {
+            System.out.println("Usage: lama-truffle FILE.lama");
+            System.exit(1);
+        }
         
-        // CharStream stream = CharStreams.fromFileName(args[0]);
-        // CharStream stream = CharStreams.fromFileName("./Sort.lama");
-        CharStream stream = CharStreams.fromFileName("./Test.lama");
+        CharStream stream = CharStreams.fromFileName(args[0]);
         LamaParser parser = new LamaParser(new CommonTokenStream(new LamaLexer(stream)));
         LamaVisitorImpl visitor = new LamaVisitorImpl();
         ExpressionNode node = parser.compilationUnit().accept(visitor);
@@ -32,6 +30,6 @@ public class App {
         
         Object result = callTarget.call();
 
-        System.out.println(result);
+        // System.out.println(result);
     }
 }

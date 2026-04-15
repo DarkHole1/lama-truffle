@@ -10,6 +10,6 @@ public class BooleanLiteralNode extends LiteralNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        return (boolean) getValue() ? 1 : 0; // In Lama, true is represented as 1, false as 0
+        return (boolean) getValue() ? 1l : 0l;
     }
 }
