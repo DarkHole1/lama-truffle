@@ -5,7 +5,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 public class ArrayLiteralNode extends ExpressionNode {
     @Children ExpressionNode[] expressions;
 
-    ArrayLiteralNode(ExpressionNode[] expressions) {
+    public ArrayLiteralNode(ExpressionNode[] expressions) {
         this.expressions = expressions;
     }
 

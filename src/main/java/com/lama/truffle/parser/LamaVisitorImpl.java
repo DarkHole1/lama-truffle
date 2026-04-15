@@ -340,6 +340,10 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             return visit(ctx.caseExpression());
         } else if (ctx.letExpression() != null) {
             return visit(ctx.letExpression());
+        } else if (ctx.listExpression() != null) {
+            return visit(ctx.listExpression());
+        } else if (ctx.arrayExpression() != null) {
+            return visit(ctx.arrayExpression());
         }
 
         return new IntegerLiteralNode(0);
@@ -619,6 +623,30 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         } finally {
             currentScope = previousScope;
         }
+    }
+
+    @Override
+    public ExpressionNode visitListExpression(LamaParser.ListExpressionContext ctx) {
+        ExpressionNode[] elementNodes = new ExpressionNode[0];
+        if (ctx.expression().size() > 0) {
+            elementNodes = new ExpressionNode[ctx.expression().size()];
+            for (int i = 0; i < ctx.expression().size(); i++) {
+                elementNodes[i] = visit(ctx.expression(i));
+            }
+        }
+        return new ListLiteralNode(elementNodes);
+    }
+
+    @Override
+    public ExpressionNode visitArrayExpression(LamaParser.ArrayExpressionContext ctx) {
+        ExpressionNode[] elementNodes = new ExpressionNode[0];
+        if (ctx.expression().size() > 0) {
+            elementNodes = new ExpressionNode[ctx.expression().size()];
+            for (int i = 0; i < ctx.expression().size(); i++) {
+                elementNodes[i] = visit(ctx.expression(i));
+            }
+        }
+        return new ArrayLiteralNode(elementNodes);
     }
 
     // Definition visitors
