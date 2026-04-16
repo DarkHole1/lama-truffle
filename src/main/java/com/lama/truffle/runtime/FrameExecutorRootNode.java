@@ -5,18 +5,8 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
-/**
- * Generic RootNode that executes an expression body in a new frame.
- * Used by ScopeEnterNode and closures to create child frames.
- *
- * Slot 0+: local variables / parameters
- *
- * Arguments layout: [parentFrame, arg0, arg1, ...]
- * Parent frame is accessed via getArguments()[0] at runtime for cross-builder variable lookups.
- */
 public class FrameExecutorRootNode extends RootNode {
-
-    private final int[] parameterSlots;  // null for non-function scopes
+    private final int[] parameterSlots;
 
     @Child
     private ExpressionNode body;
@@ -28,9 +18,6 @@ public class FrameExecutorRootNode extends RootNode {
         this.parameterSlots = parameterSlots;
     }
 
-    /**
-     * For non-function scopes (no parameter binding).
-     */
     public FrameExecutorRootNode(FrameDescriptor descriptor, ExpressionNode body) {
         this(descriptor, body, null);
     }

@@ -4,12 +4,7 @@ import com.lama.truffle.types.Closure;
 import com.lama.truffle.types.Sexp;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-/**
- * Type pattern that checks if a value is of a specific type.
- * Supports: #box (boxed/rest), #val (int), #str (string), #array, #sexp, #fun (closure)
- */
 public class TypePatternNode extends PatternNode {
-
     public enum Type {
         BOX,    // Boxed value (non-primitive)
         VAL,    // Integer (unboxed value)

@@ -3,10 +3,6 @@ package com.lama.truffle.nodes;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-/**
- * Node for if-then-else expressions.
- * Supports multiple elif branches and an optional else branch.
- */
 public class IfNode extends ExpressionNode {
 
     @Child private ExpressionNode condition;
@@ -29,11 +25,10 @@ public class IfNode extends ExpressionNode {
     protected Object doIf(VirtualFrame frame) {
         long conditionValue = (long) condition.execute(frame);
         
-        if (conditionValue != 0) { // Non-zero is true
+        if (conditionValue != 0) {
             return thenBranch.execute(frame);
         }
-
-        // Check elif conditions
+    
         for (int i = 0; i < elifConditions.length; i++) {
             long elifConditionValue = (long) elifConditions[i].execute(frame);
             if (elifConditionValue != 0) {
@@ -41,12 +36,11 @@ public class IfNode extends ExpressionNode {
             }
         }
 
-        // Execute else branch if present
         if (elseBranch != null) {
             return elseBranch.execute(frame);
         }
 
-        return 0; // Default return when no branch matches
+        return 0L;
     }
 
     public ExpressionNode getCondition() {

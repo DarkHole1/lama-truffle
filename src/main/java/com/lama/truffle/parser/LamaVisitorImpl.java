@@ -100,13 +100,13 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     @Override
     public ExpressionNode visitExpression(LamaParser.ExpressionContext ctx) {
-        if (ctx.expression().size() > 1) {
-            ExpressionNode last = null;
-            for (LamaParser.ExpressionContext exprCtx : ctx.expression()) {
-                last = visit(exprCtx);
+        if (ctx.expression().size() > 0) {
+            ExpressionNode[] exprs = new ExpressionNode[ctx.expression().size() + 1];
+            exprs[0] = visit(ctx.basicExpression());
+            for (int i = 0; i < ctx.expression().size(); i++) {
+                exprs[i + 1] = visit(ctx.expression(i));
             }
-            // TODO
-            return last;
+            return new SequenceNode(exprs);
         } else {
             return visit(ctx.basicExpression());
         }
@@ -120,7 +120,6 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     @Override
     public ExpressionNode visitAssignmentExpr(LamaParser.AssignmentExprContext ctx) {
         if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals(":=")) {
-            // Assignment: LIDENT := expr
             String varName = ctx.getChild(0).getText();
             VariableLookup lookup = currentScope.lookupVariable(varName);
             if (lookup == null) {

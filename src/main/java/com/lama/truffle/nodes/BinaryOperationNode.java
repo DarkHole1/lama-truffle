@@ -23,7 +23,7 @@ public abstract class BinaryOperationNode extends ExpressionNode {
         GREATER_EQUAL(">="),
         LOGICAL_AND("&&"),
         LOGICAL_OR("!!"),
-        CONS(":"); // For list construction
+        CONS(":");
 
         private final String symbol;
 

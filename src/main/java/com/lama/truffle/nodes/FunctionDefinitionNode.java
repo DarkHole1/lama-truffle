@@ -4,18 +4,13 @@ import com.lama.truffle.types.Closure;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-/**
- * Node for function definitions.
- * Creates a closure, stores it in the function's slot in the frame,
- * and registers it in the function registry.
- */
 public class FunctionDefinitionNode extends DefinitionNode {
 
     private final String functionName;
     private final String[] parameterNames;
     private final int[] parameterSlots;
     private final FrameDescriptor descriptor;
-    private final int functionSlot;  // slot in enclosing frame to store the closure
+    private final int functionSlot;  
     @Child
     private ExpressionNode body;
 

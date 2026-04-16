@@ -2,10 +2,6 @@ package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-/**
- * Internal loop body for do-while-expressions.
- * Executes body and condition in the same frame (the loop's scope).
- */
 public class DoWhileLoopBodyNode extends ExpressionNode {
 
     @Child private ExpressionNode body;

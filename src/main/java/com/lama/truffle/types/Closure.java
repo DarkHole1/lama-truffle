@@ -8,10 +8,6 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 
-/**
- * Represents a closure (function value).
- * The closure captures the materialized parent frame at creation time.
- */
 public final class Closure {
 
     private final String name;

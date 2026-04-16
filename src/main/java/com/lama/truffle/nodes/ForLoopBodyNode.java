@@ -2,10 +2,6 @@ package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-/**
- * Internal loop body for for-expressions.
- * Executes condition, body, and update in the same frame (the loop's scope).
- */
 public class ForLoopBodyNode extends ExpressionNode {
 
     @Child private ExpressionNode condition;

@@ -2,11 +2,6 @@ package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-/**
- * AST node for let-in expressions: let pattern = expression in body
- * Creates a new scope where the pattern variables are bound to the expression result,
- * and the body is evaluated in that scope.
- */
 public class LetInNode extends ExpressionNode {
 
     @Child private ExpressionNode boundExpression;
