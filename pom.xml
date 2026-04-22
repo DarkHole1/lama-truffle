@@ -37,7 +37,7 @@
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-dsl-processor</artifactId>
             <version>23.1.0</version>
-            <scope>provided</scope>
+            <!-- <scope>provided</scope> -->
         </dependency>
         
         <dependency>
@@ -57,6 +57,14 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <release>${java.version}</release>
+
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.graalvm.truffle</groupId>
+                            <artifactId>truffle-dsl-processor</artifactId>
+                            <version>23.1.0</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
@@ -86,7 +94,7 @@
         </plugins>
     </build>
 
-    <profiles>
+    <!-- <profiles>
         <profile>
             <id>antlr-code-generation</id>
             <activation>
@@ -118,6 +126,6 @@
                 </plugins>
             </build>
         </profile>
-    </profiles>
+    </profiles> -->
 
 </project>
