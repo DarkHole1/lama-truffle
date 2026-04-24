@@ -21,9 +21,10 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     public ExpressionNode visitCompilationUnit(LamaParser.CompilationUnitContext ctx) {
         currentScope = new Scope();
         if (ctx.scopeExpression() != null) {
+            int[] slots = CompilationUnitNode.prepareScope(currentScope);
             ExpressionNode body = visitScopeExpression(ctx.scopeExpression());
             rootFrameDescriptor = currentScope.getBuilder().build();
-            return body;
+            return new CompilationUnitNode(body, slots);
         }
         rootFrameDescriptor = currentScope.getBuilder().build();
         return null;
@@ -36,24 +37,36 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         currentScope = childScope;
 
         try {
+            int size = 0;
             for (DefinitionContext defCtx : ctx.definition()) {
                 if (defCtx.variableDefinition() != null) {
                     VariableDefinitionSequenceContext seq = defCtx.variableDefinition().variableDefinitionSequence();
                     for (VariableDefinitionItemContext itemCtx : seq.variableDefinitionItem()) {
                         String varName = itemCtx.LIDENT().getText();
                         childScope.allocateVariable(varName);
+                        size++;
                     }
                 } else if (defCtx.functionDefinition() != null) {
                     String funcName = defCtx.functionDefinition().LIDENT().getText();
                     childScope.allocateVariable(funcName);
+                    size++;
                 }
             }
 
             DefinitionNode[] definitions = new DefinitionNode[0];
             if (ctx.definition().size() > 0) {
-                definitions = new DefinitionNode[ctx.definition().size()];
+                definitions = new DefinitionNode[size];
+                int j = 0;
                 for (int i = 0; i < ctx.definition().size(); i++) {
-                    definitions[i] = (DefinitionNode) visitDefinition(ctx.definition(i));
+                    ExpressionNode def = visitDefinition(ctx.definition(i));
+                    if (def instanceof DefinitionNode ddef) {
+                        definitions[j++] = ddef;
+                    } else {
+                        SequenceNode sdef = (SequenceNode)def;
+                        for (ExpressionNode expr : sdef.getExpressions()) {
+                            definitions[j++] = (DefinitionNode)expr;
+                        }
+                    }
                 }
             }
 
@@ -84,7 +97,11 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         if (seq.variableDefinitionItem().size() == 1) {
             return visitVariableDefinitionItem(seq.variableDefinitionItem(0));
         }
-        return visitVariableDefinitionItem(seq.variableDefinitionItem(0));
+        ExpressionNode[] exprs = new ExpressionNode[seq.variableDefinitionItem().size()];
+        for (var i = 0; i < exprs.length; i++) {
+            exprs[i] = visit(seq.variableDefinitionItem(i));
+        }
+        return new SequenceNode(exprs);
     }
 
     public ExpressionNode visitVariableDefinitionItem(LamaParser.VariableDefinitionItemContext ctx) {
@@ -263,6 +280,21 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             ExpressionNode arrayNode = visit(ctx.postfixExpression());
             ExpressionNode indexNode = visit(ctx.expression(0));
             return ArrayAccessNodeGen.create(arrayNode, indexNode);
+        } else if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals(".")) {
+            String varName = ctx.LIDENT().getText();
+            VariableLookup lookup = currentScope.lookupVariable(varName);
+            if (lookup == null) {
+                throw new RuntimeException("Undefined variable: " + varName);
+            }
+            ExpressionNode functionNode = new VariableAccessNode(varName, lookup);
+
+            ExpressionNode[] argumentNodes = new ExpressionNode[ctx.expression().size() + 1];
+            argumentNodes[0] = visit(ctx.postfixExpression());
+            for (int i = 0; i < ctx.expression().size(); i++) {
+                argumentNodes[i + 1] = visit(ctx.expression(i));
+            }
+
+            return new FunctionCallNode(functionNode, argumentNodes);
         }
         return visit(ctx.primary());
     }
@@ -305,7 +337,8 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 }
             }
 
-            // Create function scope with its own builder (closure gets its own FrameDescriptor)
+            // Create function scope with its own builder (closure gets its own
+            // FrameDescriptor)
             Scope functionScope = Scope.createFunctionScope(currentScope);
             Scope previousScope = currentScope;
             currentScope = functionScope;

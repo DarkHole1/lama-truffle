@@ -1,4 +1,4 @@
-// Generated from src/main/java/com/lama/truffle/parser/Lama.g4 by ANTLR 4.13.2
+// Generated from src/main/java/com/lama/truffle/parser/Lama.g4 by ANTLR 4.12.0
 package com.lama.truffle.parser;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 

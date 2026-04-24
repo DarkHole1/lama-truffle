@@ -1,6 +1,6 @@
 package com.lama.truffle.nodes;
 
-import com.lama.truffle.types.Closure;
+import com.lama.truffle.types.Executable;
 import com.lama.truffle.types.Sexp;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -36,7 +36,7 @@ public class TypePatternNode extends PatternNode {
             case SEXP:
                 return value instanceof Sexp;
             case FUN:
-                return value instanceof Closure;
+                return value instanceof Executable;
             default:
                 return false;
         }

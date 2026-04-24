@@ -83,6 +83,10 @@ public abstract class BinaryOperationNode extends ExpressionNode {
                 return left > right ? 1 : 0;
             case GREATER_EQUAL:
                 return left >= right ? 1 : 0;
+            case LOGICAL_AND:
+                return left == 0 ? left : right;
+            case LOGICAL_OR:
+                return left != 0 ? left : right;
             default:
                 throw new UnsupportedOperationException("Operator " + operator + " not supported for integers");
         }

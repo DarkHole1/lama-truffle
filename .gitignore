@@ -140,3 +140,10 @@ local.properties
 .externalToolBuilders/
 *.launch
 *.pydevproject
+
+lama-truffle
+tests
+test
+coddle
+svm*
+Test.lama

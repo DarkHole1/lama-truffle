@@ -8,7 +8,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 
-public final class Closure {
+public final class Closure extends Executable {
 
     private final String name;
     private final String[] parameterNames;

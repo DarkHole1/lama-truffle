@@ -90,6 +90,7 @@ postfixExpression
     : primary
     | postfixExpression '(' (expression (',' expression)*)? ')'
     | postfixExpression '[' expression ']'
+    | postfixExpression '.' LIDENT ('(' (expression (',' expression)*)? ')')?
     ;
 
 primary
@@ -246,8 +247,8 @@ ARRAY_KW   : 'array';
 SEXP       : 'sexp';
 
 // Identifiers
-UIDENT     : [A-Z][a-zA-Z0-9]*;
-LIDENT     : [a-z][a-zA-Z0-9]*;
+UIDENT     : [A-Z][a-zA-Z0-9_]*;
+LIDENT     : [a-z][a-zA-Z0-9_]*;
 
 // Literals
 DECIMAL    : [0-9]+;

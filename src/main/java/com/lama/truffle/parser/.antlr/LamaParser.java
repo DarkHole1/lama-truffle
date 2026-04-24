@@ -1,5 +1,4 @@
-// Generated from src/main/java/com/lama/truffle/parser/Lama.g4 by ANTLR 4.12.0
-package com.lama.truffle.parser;
+// Generated from /home/darkhole/Projects/itmo-devtools/lama-truffle/src/main/java/com/lama/truffle/parser/Lama.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
 public class LamaParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.12.0", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.13.1", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -146,11 +145,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_compilationUnit; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitCompilationUnit(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final CompilationUnitContext compilationUnit() throws RecognitionException {
@@ -197,11 +191,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_importDecl; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitImportDecl(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ImportDeclContext importDecl() throws RecognitionException {
@@ -244,11 +233,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_scopeExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitScopeExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ScopeExpressionContext scopeExpression() throws RecognitionException {
@@ -312,11 +296,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_definition; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitDefinition(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final DefinitionContext definition() throws RecognitionException {
@@ -371,11 +350,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_variableDefinition; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitVariableDefinition(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final VariableDefinitionContext variableDefinition() throws RecognitionException {
@@ -424,11 +398,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_variableDefinitionSequence; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitVariableDefinitionSequence(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final VariableDefinitionSequenceContext variableDefinitionSequence() throws RecognitionException {
@@ -479,11 +448,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_variableDefinitionItem; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitVariableDefinitionItem(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final VariableDefinitionItemContext variableDefinitionItem() throws RecognitionException {
@@ -535,11 +499,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_functionDefinition; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitFunctionDefinition(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final FunctionDefinitionContext functionDefinition() throws RecognitionException {
@@ -594,11 +553,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_functionArguments; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitFunctionArguments(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final FunctionArgumentsContext functionArguments() throws RecognitionException {
@@ -656,11 +610,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_functionBody; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitFunctionBody(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final FunctionBodyContext functionBody() throws RecognitionException {
@@ -703,11 +652,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_expression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ExpressionContext expression() throws RecognitionException {
@@ -759,11 +703,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_basicExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitBasicExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final BasicExpressionContext basicExpression() throws RecognitionException {
@@ -799,11 +738,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_assignmentExpr; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitAssignmentExpr(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final AssignmentExprContext assignmentExpr() throws RecognitionException {
@@ -851,11 +785,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_listConstructorExpr; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitListConstructorExpr(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ListConstructorExprContext listConstructorExpr() throws RecognitionException {
@@ -903,11 +832,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_disjunctionExpr; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitDisjunctionExpr(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final DisjunctionExprContext disjunctionExpr() throws RecognitionException {
@@ -962,11 +886,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_conjunctionExpr; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitConjunctionExpr(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ConjunctionExprContext conjunctionExpr() throws RecognitionException {
@@ -1021,11 +940,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_comparisonExpr; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitComparisonExpr(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ComparisonExprContext comparisonExpr() throws RecognitionException {
@@ -1082,11 +996,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_additiveExpr; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitAdditiveExpr(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final AdditiveExprContext additiveExpr() throws RecognitionException {
@@ -1150,11 +1059,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_multiplicativeExpr; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitMultiplicativeExpr(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final MultiplicativeExprContext multiplicativeExpr() throws RecognitionException {
@@ -1215,11 +1119,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_unaryExpr; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitUnaryExpr(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final UnaryExprContext unaryExpr() throws RecognitionException {
@@ -1273,11 +1172,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_postfixExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitPostfixExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final PostfixExpressionContext postfixExpression() throws RecognitionException {
@@ -1486,11 +1380,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_primary; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitPrimary(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final PrimaryContext primary() throws RecognitionException {
@@ -1674,11 +1563,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_arrayExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitArrayExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ArrayExpressionContext arrayExpression() throws RecognitionException {
@@ -1743,11 +1627,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_listExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitListExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ListExpressionContext listExpression() throws RecognitionException {
@@ -1813,11 +1692,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_sExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitSExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final SExpressionContext sExpression() throws RecognitionException {
@@ -1897,11 +1771,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_letExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitLetExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final LetExpressionContext letExpression() throws RecognitionException {
@@ -1953,11 +1822,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_ifExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitIfExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final IfExpressionContext ifExpression() throws RecognitionException {
@@ -2018,11 +1882,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_elsePart; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitElsePart(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ElsePartContext elsePart() throws RecognitionException {
@@ -2095,11 +1954,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_whileDoExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitWhileDoExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final WhileDoExpressionContext whileDoExpression() throws RecognitionException {
@@ -2146,11 +2000,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_doWhileExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitDoWhileExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final DoWhileExpressionContext doWhileExpression() throws RecognitionException {
@@ -2203,11 +2052,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_forExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitForExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ForExpressionContext forExpression() throws RecognitionException {
@@ -2259,11 +2103,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_pattern; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitPattern(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final PatternContext pattern() throws RecognitionException {
@@ -2312,11 +2151,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_consPattern; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitConsPattern(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ConsPatternContext consPattern() throws RecognitionException {
@@ -2377,11 +2211,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_simplePattern; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitSimplePattern(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final SimplePatternContext simplePattern() throws RecognitionException {
@@ -2568,11 +2397,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_wildcardPattern; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitWildcardPattern(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final WildcardPatternContext wildcardPattern() throws RecognitionException {
@@ -2609,11 +2433,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_sExprPattern; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitSExprPattern(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final SExprPatternContext sExprPattern() throws RecognitionException {
@@ -2688,11 +2507,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_arrayPattern; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitArrayPattern(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ArrayPatternContext arrayPattern() throws RecognitionException {
@@ -2757,11 +2571,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_listPattern; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitListPattern(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final ListPatternContext listPattern() throws RecognitionException {
@@ -2829,11 +2638,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_caseExpression; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitCaseExpression(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final CaseExpressionContext caseExpression() throws RecognitionException {
@@ -2877,11 +2681,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_caseBranches; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitCaseBranches(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final CaseBranchesContext caseBranches() throws RecognitionException {
@@ -2934,11 +2733,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_caseBranch; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitCaseBranch(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final CaseBranchContext caseBranch() throws RecognitionException {
@@ -2977,11 +2771,6 @@ public class LamaParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_infixDefinition; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof LamaVisitor ) return ((LamaVisitor<? extends T>)visitor).visitInfixDefinition(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final InfixDefinitionContext infixDefinition() throws RecognitionException {

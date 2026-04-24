@@ -1,6 +1,6 @@
 package com.lama.truffle.nodes;
 
-import com.lama.truffle.types.Closure;
+import com.lama.truffle.types.Executable;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class FunctionCallNode extends ExpressionNode {
@@ -22,8 +22,8 @@ public class FunctionCallNode extends ExpressionNode {
             arguments[i] = argumentNodes[i].execute(frame);
         }
 
-        if (funcObj instanceof Closure) {
-            Closure closure = (Closure) funcObj;
+        if (funcObj instanceof Executable) {
+            Executable closure = (Executable) funcObj;
             return closure.execute(frame, arguments);
         } else {
             throw new RuntimeException("Expression evaluated into non-function");
