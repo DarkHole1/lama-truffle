@@ -2,6 +2,7 @@ package com.lama.truffle.nodes;
 
 import com.lama.truffle.types.List;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class ListLiteralNode extends ExpressionNode {
     @Children
@@ -11,7 +12,7 @@ public class ListLiteralNode extends ExpressionNode {
         this.elementNodes = elementNodes;
     }
 
-    @Override
+    @Override @ExplodeLoop
     public Object execute(VirtualFrame frame) {
         List result = null;
         for (int i = elementNodes.length - 1; i >= 0; i--) {

@@ -1,6 +1,6 @@
 package com.lama.truffle.nodes;
 
-import com.lama.truffle.types.Executable;
+import com.lama.truffle.types.Closure;
 import com.lama.truffle.types.Sexp;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
@@ -16,12 +16,14 @@ public class TypePatternNode extends PatternNode {
 
     private final Type type;
 
-    public TypePatternNode(Type type) {
+    public TypePatternNode(Type type, int scrutineeSlot) {
+        super(scrutineeSlot);
         this.type = type;
     }
 
     @Override
-    public boolean match(Object value, VirtualFrame frame) {
+    public boolean executeBoolean(VirtualFrame frame) {
+        Object value = frame.getObject(getScrutineeSlot());
         switch (type) {
             case BOX:
                 // Boxed value: anything that's not an Integer (unboxed)
@@ -36,15 +38,10 @@ public class TypePatternNode extends PatternNode {
             case SEXP:
                 return value instanceof Sexp;
             case FUN:
-                return value instanceof Executable;
+                return value instanceof Closure;
             default:
                 return false;
         }
-    }
-
-    @Override
-    public Object execute(VirtualFrame frame) {
-        return null;
     }
 
     public Type getType() {

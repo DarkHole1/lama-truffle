@@ -2,16 +2,20 @@ package com.lama.truffle.nodes;
 
 import com.lama.truffle.types.List;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class ListPatternNode extends PatternNode {
-    @Children private PatternNode[] elementPatterns;
+    @Children private final PatternNode[] elementPatterns;
 
-    public ListPatternNode(PatternNode[] elementPatterns) {
+    public ListPatternNode(PatternNode[] elementPatterns, int scrutineeSlot) {
+        super(scrutineeSlot);
         this.elementPatterns = elementPatterns;
     }
 
-    @Override
-    public boolean match(Object value, VirtualFrame frame) {
+    @Override @ExplodeLoop
+    public boolean executeBoolean(VirtualFrame frame) {
+        Object value = frame.getObject(getScrutineeSlot());
+
         if (!(value instanceof List)) {
             return false;
         }
@@ -27,23 +31,14 @@ public class ListPatternNode extends PatternNode {
             if (current == null) {
                 return false; 
             }
-            if (!elementPatterns[i].match(current.getFirst(), frame)) {
+            frame.setObject(getScrutineeSlot(), current.getFirst());
+            if (!elementPatterns[i].executeBoolean(frame)) {
                 return false;
             }
             current = current.getNext();
         }
 
         return current == null || (current.getNext() == null && current.getFirst() == null);
-    }
-
-    @Override
-    public Object execute(VirtualFrame frame) {
-        if (elementPatterns != null) {
-            for (PatternNode pattern : elementPatterns) {
-                pattern.execute(frame);
-            }
-        }
-        return null;
     }
 
     public PatternNode[] getElementPatterns() {

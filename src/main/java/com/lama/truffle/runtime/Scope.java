@@ -1,8 +1,11 @@
 package com.lama.truffle.runtime;
 
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -78,10 +81,14 @@ public class Scope {
         return false;
     }
 
-    public static VirtualFrame getParentFrame(VirtualFrame frame, int depth) {
-        VirtualFrame current = frame;
-        for (int i = 0; i < depth; i++) {
-            current = (VirtualFrame) current.getArguments()[0];
+    @ExplodeLoop
+    public static Frame getParentFrame(VirtualFrame frame, int depth) {
+        if (depth == 0) {
+            return frame;
+        }
+        MaterializedFrame current = (MaterializedFrame) frame.getArguments()[0];
+        for (int i = 1; i < depth; i++) {
+            current = (MaterializedFrame) current.getArguments()[0];
         }
         return current;
     }

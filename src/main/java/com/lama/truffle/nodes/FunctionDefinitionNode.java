@@ -2,6 +2,7 @@ package com.lama.truffle.nodes;
 
 import com.lama.truffle.types.Closure;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class FunctionDefinitionNode extends DefinitionNode {
@@ -27,7 +28,7 @@ public class FunctionDefinitionNode extends DefinitionNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        VirtualFrame materializedFrame = frame.materialize();
+        MaterializedFrame materializedFrame = frame.materialize();
         Closure closure = new Closure(functionName, parameterNames, parameterSlots, body, descriptor, materializedFrame);
 
         frame.setObject(functionSlot, closure);

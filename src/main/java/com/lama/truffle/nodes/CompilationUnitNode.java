@@ -3,14 +3,15 @@ package com.lama.truffle.nodes;
 import java.util.Scanner;
 
 import com.lama.truffle.runtime.Scope;
-import com.lama.truffle.types.NativeFunction;
+import com.lama.truffle.types.Closure;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class CompilationUnitNode extends ExpressionNode {
-    private final static NativeFunction[] funcs = {
-        new NativeFunction("read", CompilationUnitNode::read),
-        new NativeFunction("write", CompilationUnitNode::write),
-        new NativeFunction("length", CompilationUnitNode::length),
+    private final static Closure[] funcs = {
+        new Closure("read", CompilationUnitNode::read),
+        new Closure("write", CompilationUnitNode::write),
+        new Closure("length", CompilationUnitNode::length),
     };
 
     private final static Scanner s = new Scanner(System.in);
@@ -23,7 +24,7 @@ public class CompilationUnitNode extends ExpressionNode {
         this.slots = slots;
     }
 
-    @Override
+    @Override @ExplodeLoop
     public Object execute(VirtualFrame frame) {
         for (int i = 0; i < slots.length; i++) {
             frame.setObject(slots[i], funcs[i]);
@@ -45,12 +46,12 @@ public class CompilationUnitNode extends ExpressionNode {
     }
 
     public static Object write(Object[] args) {
-        System.out.println(args[0]);
+        System.out.println(args[1]);
         return 0L;
     }
 
     public static Object length(Object[] args) {
-        Object arg = args[0];
+        Object arg = args[1];
         if (arg instanceof String s) {
             return (long)(s.length());
         }

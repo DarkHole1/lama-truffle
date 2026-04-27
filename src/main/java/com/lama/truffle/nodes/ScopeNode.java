@@ -1,10 +1,11 @@
 package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class ScopeNode extends ExpressionNode {
 
-    private final DefinitionNode[] definitions;
+    @Children private DefinitionNode[] definitions;
     @Child private ExpressionNode expression;
 
     public ScopeNode(DefinitionNode[] definitions, ExpressionNode expression) {
@@ -12,7 +13,7 @@ public class ScopeNode extends ExpressionNode {
         this.expression = expression;
     }
 
-    @Override
+    @Override @ExplodeLoop
     public Object execute(VirtualFrame frame) {
         for (DefinitionNode definition : definitions) {
             definition.execute(frame);

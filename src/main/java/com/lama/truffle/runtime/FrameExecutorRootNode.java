@@ -5,7 +5,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
-public class FrameExecutorRootNode extends RootNode {
+public final class FrameExecutorRootNode extends RootNode {
     private final int[] parameterSlots;
 
     @Child

@@ -1,6 +1,8 @@
 package com.lama.truffle.types;
 
-public class Sexp {
+import com.oracle.truffle.api.interop.TruffleObject;
+
+public class Sexp implements TruffleObject {
     private String name; 
     private Object[] values;
 

@@ -1,6 +1,7 @@
 package com.lama.truffle.types;
+import com.oracle.truffle.api.interop.TruffleObject;
 
-public final class List {
+public final class List implements TruffleObject {
     private Object first;
     private List next;
 

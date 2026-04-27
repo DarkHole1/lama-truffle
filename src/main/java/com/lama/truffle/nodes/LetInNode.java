@@ -7,18 +7,21 @@ public class LetInNode extends ExpressionNode {
     @Child private ExpressionNode boundExpression;
     @Child private ExpressionNode body;
     private final PatternNode pattern;
+    private final int scrutineeSlot;
 
-    public LetInNode(ExpressionNode boundExpression, ExpressionNode body, PatternNode pattern) {
+    public LetInNode(ExpressionNode boundExpression, ExpressionNode body, PatternNode pattern, int scrutineeSlot) {
         this.boundExpression = boundExpression;
         this.body = body;
         this.pattern = pattern;
+        this.scrutineeSlot = scrutineeSlot;
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
         Object value = boundExpression.execute(frame);
-        
-        if (!pattern.match(value, frame)) {
+        frame.setObject(scrutineeSlot, value);
+
+        if (!pattern.executeBoolean(frame)) {
             throw new RuntimeException("Pattern match failed in let expression");
         }
         

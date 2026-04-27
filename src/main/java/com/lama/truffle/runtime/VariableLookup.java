@@ -1,5 +1,6 @@
 package com.lama.truffle.runtime;
 
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class VariableLookup {
@@ -12,12 +13,12 @@ public final class VariableLookup {
     }
 
     public Object read(VirtualFrame frame) {
-        VirtualFrame target = Scope.getParentFrame(frame, depth);
+        Frame target = Scope.getParentFrame(frame, depth);
         return target.getObject(slot);
     }
 
     public void write(VirtualFrame frame, Object value) {
-        VirtualFrame target = Scope.getParentFrame(frame, depth);
+        Frame target = Scope.getParentFrame(frame, depth);
         target.setObject(slot, value);
     }
 

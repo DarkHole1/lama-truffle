@@ -2,28 +2,30 @@ package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class CaseNode extends ExpressionNode {
 
     @Child private ExpressionNode scrutinee;
-    @Children private ExpressionNode[] branches;
+    @Children private final PatternNode[] patterns;
+    @Children private final ExpressionNode[] bodies;
+    private final int scrutineeSlot;
 
-    public CaseNode(ExpressionNode scrutinee, ExpressionNode[] branches) {
+    public CaseNode(ExpressionNode scrutinee, PatternNode[] patterns, ExpressionNode[] bodies, int scrutineeSlot) {
         this.scrutinee = scrutinee;
-        this.branches = branches;
+        this.patterns = patterns;
+        this.bodies = bodies;
+        this.scrutineeSlot = scrutineeSlot;
     }
 
-    @Specialization
+    @Specialization @ExplodeLoop
     protected Object doCase(VirtualFrame frame) {
         Object scrutineeValue = scrutinee.execute(frame);
-
-        for (ExpressionNode branch : branches) {
-            if (branch instanceof CaseBranchNode) {
-                CaseBranchNode caseBranch = (CaseBranchNode) branch;
-
-                if (caseBranch.matches(scrutineeValue, frame)) {
-                    return caseBranch.execute(frame);
-                }
+        
+        for (int i = 0; i < patterns.length; i++) {
+            frame.setObject(scrutineeSlot, scrutineeValue);
+            if (patterns[i].executeBoolean(frame)) {
+                return bodies[i].execute(frame);
             }
         }
 
@@ -32,10 +34,6 @@ public class CaseNode extends ExpressionNode {
 
     public ExpressionNode getScrutinee() {
         return scrutinee;
-    }
-
-    public ExpressionNode[] getBranches() {
-        return branches;
     }
 
     @Override

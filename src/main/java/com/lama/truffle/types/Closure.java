@@ -1,68 +1,48 @@
 package com.lama.truffle.types;
 
+import java.util.function.Function;
+
 import com.lama.truffle.nodes.ExpressionNode;
+import com.lama.truffle.nodes.NativeCallRootNode;
 import com.lama.truffle.runtime.FrameExecutorRootNode;
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.RootNode;
 
-public final class Closure extends Executable {
+public final class Closure {
 
     private final String name;
-    private final String[] parameterNames;
-    private final int[] parameterSlots;
-    private final ExpressionNode body;
-    private final FrameDescriptor descriptor;
-    private final FrameExecutorRootNode root;
     private final CallTarget callTarget;
-    private final IndirectCallNode callNode;
-    private final VirtualFrame materializedParentFrame;
+    private final MaterializedFrame materializedParentFrame;
 
     public Closure(String name, String[] parameterNames, int[] parameterSlots,
-                   ExpressionNode body, FrameDescriptor descriptor, VirtualFrame materializedParentFrame) {
+                   ExpressionNode body, FrameDescriptor descriptor, MaterializedFrame materializedParentFrame) {
         this.name = name;
-        this.parameterNames = parameterNames;
-        this.parameterSlots = parameterSlots;
-        this.body = body;
-        this.descriptor = descriptor;
         this.materializedParentFrame = materializedParentFrame;
         
-        this.root = new FrameExecutorRootNode(descriptor, body, parameterSlots);
+        RootNode root = new FrameExecutorRootNode(descriptor, body, parameterSlots);
         this.callTarget = root.getCallTarget();
-        this.callNode = Truffle.getRuntime().createIndirectCallNode();
     }
 
-    public Object execute(VirtualFrame frame, Object[] arguments) {
-        Object[] callArgs = new Object[arguments.length + 1];
-        callArgs[0] = materializedParentFrame;
-        System.arraycopy(arguments, 0, callArgs, 1, arguments.length);
+    public Closure(String name, Function<Object[], Object> callable) {
+        this.name = name;
+        this.materializedParentFrame = null;
 
-        return callNode.call(callTarget, callArgs);
+        RootNode root = new NativeCallRootNode(callable);
+        this.callTarget = root.getCallTarget();
     }
 
     public String getName() {
         return name;
     }
 
-    public String[] getParameterNames() {
-        return parameterNames;
-    }
-
-    public int[] getParameterSlots() {
-        return parameterSlots;
-    }
-
-    public ExpressionNode getBody() {
-        return body;
-    }
-
-    public FrameDescriptor getDescriptor() {
-        return descriptor;
-    }
-
     public VirtualFrame getMaterializedParentFrame() {
         return materializedParentFrame;
+    }
+
+    public CallTarget getCallTarget() {
+        return callTarget;
     }
 }

@@ -8,17 +8,20 @@ public class VariablePatternNode extends PatternNode {
     private final int slot;
     private final PatternNode nestedPatternNode;
 
-    public VariablePatternNode(String variableName, int slot, PatternNode nestedPatternNode) {
+    public VariablePatternNode(String variableName, int slot, PatternNode nestedPatternNode, int scrutineeSlot) {
+        super(scrutineeSlot);
         this.variableName = variableName;
         this.slot = slot;
         this.nestedPatternNode = nestedPatternNode;
     }
 
     @Override
-    public boolean match(Object value, VirtualFrame frame) {
+    public boolean executeBoolean(VirtualFrame frame) {
+        Object value = frame.getObject(getScrutineeSlot());
         frame.setObject(slot, value);
         if (nestedPatternNode != null) {
-            return nestedPatternNode.match(value, frame);
+            frame.setObject(getScrutineeSlot(), value);
+            return nestedPatternNode.executeBoolean(frame);
         }
         return true;
     }
@@ -29,10 +32,5 @@ public class VariablePatternNode extends PatternNode {
 
     public int getSlot() {
         return slot;
-    }
-
-    @Override
-    public Object execute(VirtualFrame frame) {
-        return frame.getObject(slot);
     }
 }

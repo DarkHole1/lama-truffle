@@ -4,7 +4,7 @@ import java.util.function.Function;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class NativeFunction extends Executable {
+public class NativeFunction {
     private final String name;
     private final Function<Object[], Object> func;
     
@@ -13,7 +13,6 @@ public class NativeFunction extends Executable {
         this.func = callable;
     }
 
-    @Override
     public Object execute(VirtualFrame frame, Object[] arguments) {
         return func.apply(arguments);
     }

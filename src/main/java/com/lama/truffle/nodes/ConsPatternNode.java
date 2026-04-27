@@ -8,13 +8,16 @@ public class ConsPatternNode extends PatternNode {
     @Child private PatternNode headPattern;
     @Child private PatternNode tailPattern;
 
-    public ConsPatternNode(PatternNode headPattern, PatternNode tailPattern) {
+    public ConsPatternNode(PatternNode headPattern, PatternNode tailPattern, int scrutineeSlot) {
+        super(scrutineeSlot);
         this.headPattern = headPattern;
         this.tailPattern = tailPattern;
     }
 
     @Override
-    public boolean match(Object value, VirtualFrame frame) {
+    boolean executeBoolean(VirtualFrame frame) {
+        Object value = frame.getObject(getScrutineeSlot());
+
         if (!(value instanceof List)) {
             return false;
         }
@@ -23,18 +26,13 @@ public class ConsPatternNode extends PatternNode {
         Object head = list.getFirst();
         List tail = list.getNext();
 
-        if (!headPattern.match(head, frame)) {
+        frame.setObject(getScrutineeSlot(), head);
+        if (!headPattern.executeBoolean(frame)) {
             return false;
         }
 
-        return tailPattern.match(tail, frame);
-    }
-
-    @Override
-    public Object execute(VirtualFrame frame) {
-        headPattern.execute(frame);
-        tailPattern.execute(frame);
-        return null;
+        frame.setObject(getScrutineeSlot(), tail);
+        return tailPattern.executeBoolean(frame);
     }
 
     public PatternNode getHeadPattern() {

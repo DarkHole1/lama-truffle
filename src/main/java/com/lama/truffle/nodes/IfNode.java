@@ -2,14 +2,15 @@ package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class IfNode extends ExpressionNode {
 
     @Child private ExpressionNode condition;
     @Child private ExpressionNode thenBranch;
-    private final ExpressionNode[] elifConditions;
-    private final ExpressionNode[] elifBranches;
-    private final ExpressionNode elseBranch;
+    @Children private final ExpressionNode[] elifConditions;
+    @Children private final ExpressionNode[] elifBranches;
+    @Child private ExpressionNode elseBranch;
 
     public IfNode(ExpressionNode condition, ExpressionNode thenBranch,
                   ExpressionNode[] elifConditions, ExpressionNode[] elifBranches,
@@ -21,7 +22,7 @@ public class IfNode extends ExpressionNode {
         this.elseBranch = elseBranch;
     }
 
-    @Specialization
+    @Specialization @ExplodeLoop
     protected Object doIf(VirtualFrame frame) {
         long conditionValue = (long) condition.execute(frame);
         

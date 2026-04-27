@@ -2,9 +2,9 @@ package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-public class CaseBranchNode extends ExpressionNode {
+public final class CaseBranchNode extends ExpressionNode {
 
-    private final PatternNode pattern;
+    @Child private PatternNode pattern;
     @Child private ExpressionNode body;
 
     public CaseBranchNode(PatternNode pattern, ExpressionNode body) {
@@ -12,9 +12,9 @@ public class CaseBranchNode extends ExpressionNode {
         this.body = body;
     }
 
-    public boolean matches(Object value, VirtualFrame frame) {
-        return pattern.match(value, frame);
-    }
+    // public boolean matches(Object value, VirtualFrame frame) {
+    //     return pattern.match(value, frame);
+    // }
 
     public Object execute(VirtualFrame frame) {
         return body.execute(frame);
