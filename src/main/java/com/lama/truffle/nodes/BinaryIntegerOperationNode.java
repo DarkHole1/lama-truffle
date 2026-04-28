@@ -3,11 +3,10 @@ package com.lama.truffle.nodes;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.lama.truffle.types.List;
 
 @NodeChild("left")
 @NodeChild("right")
-public abstract class BinaryOperationNode extends ExpressionNode {
+public abstract class BinaryIntegerOperationNode extends ExpressionNode {
 
     public enum BinaryOperator {
         ADD("+"),
@@ -22,8 +21,8 @@ public abstract class BinaryOperationNode extends ExpressionNode {
         GREATER(">"),
         GREATER_EQUAL(">="),
         LOGICAL_AND("&&"),
-        LOGICAL_OR("!!"),
-        CONS(":");
+        LOGICAL_OR("!!");
+        // CONS(":");
 
         private final String symbol;
 
@@ -47,7 +46,7 @@ public abstract class BinaryOperationNode extends ExpressionNode {
 
     protected final BinaryOperator operator;
 
-    public BinaryOperationNode(BinaryOperator operator) {
+    public BinaryIntegerOperationNode(BinaryOperator operator) {
         this.operator = operator;
     }
 
@@ -92,16 +91,16 @@ public abstract class BinaryOperationNode extends ExpressionNode {
         }
     }
 
-    @Specialization
-    protected Object doObjectObject(Object left, Object right) {
-        switch (operator) {
-            case CONS:
-                return new List(left, (List) right);
+    // @Specialization
+    // protected Object doObjectObject(Object left, Object right) {
+    //     switch (operator) {
+    //         case CONS:
+    //             return new List(left, (List) right);
 
-            default:
-                throw new UnsupportedOperationException("Operator " + operator + " not supported for objects");
-        }
-    }
+    //         default:
+    //             throw new UnsupportedOperationException("Operator " + operator + " not supported for objects");
+    //     }
+    // }
 
     @Override
     public Object execute(VirtualFrame frame) {

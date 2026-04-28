@@ -1,12 +1,13 @@
 package com.lama.truffle.parser;
 
 import com.lama.truffle.nodes.*;
+import com.lama.truffle.nodes.BinaryObjectOperationNode.BinaryOperator;
 import com.lama.truffle.parser.LamaParser.*;
 import com.lama.truffle.runtime.Scope;
 import com.lama.truffle.runtime.VariableLookup;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 
-import static com.lama.truffle.nodes.BinaryOperationNode.BinaryOperator.*;
+import static com.lama.truffle.nodes.BinaryIntegerOperationNode.BinaryOperator.*;
 
 public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
@@ -154,7 +155,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals(":")) {
             ExpressionNode left = visit(ctx.disjunctionExpr());
             ExpressionNode right = visit(ctx.listConstructorExpr());
-            return BinaryOperationNodeGen.create(CONS, left, right);
+            return BinaryObjectOperationNodeGen.create(BinaryOperator.CONS, left, right);
         } else {
             return visit(ctx.disjunctionExpr());
         }
@@ -167,7 +168,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             for (int i = 1; i < ctx.getChildCount(); i += 2) {
                 if (ctx.getChild(i).getText().equals("!!")) {
                     ExpressionNode right = visit(ctx.conjunctionExpr((i + 1) / 2));
-                    result = BinaryOperationNodeGen.create(LOGICAL_OR, result, right);
+                    result = BinaryIntegerOperationNodeGen.create(LOGICAL_OR, result, right);
                 }
             }
             return result;
@@ -183,7 +184,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             for (int i = 1; i < ctx.getChildCount(); i += 2) {
                 if (ctx.getChild(i).getText().equals("&&")) {
                     ExpressionNode right = visit(ctx.comparisonExpr((i + 1) / 2));
-                    result = BinaryOperationNodeGen.create(LOGICAL_AND, result, right);
+                    result = BinaryIntegerOperationNodeGen.create(LOGICAL_AND, result, right);
                 }
             }
             return result;
@@ -199,9 +200,9 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             ExpressionNode right = visit(ctx.additiveExpr(1));
 
             String opText = ctx.getChild(1).getText();
-            BinaryOperationNode.BinaryOperator op = fromComparisonOperator(opText);
+            BinaryIntegerOperationNode.BinaryOperator op = fromComparisonOperator(opText);
 
-            return BinaryOperationNodeGen.create(op, left, right);
+            return BinaryIntegerOperationNodeGen.create(op, left, right);
         } else {
             return visit(ctx.additiveExpr(0));
         }
@@ -215,9 +216,9 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 String opText = ctx.getChild(i).getText();
                 ExpressionNode right = visit(ctx.multiplicativeExpr((i + 1) / 2));
 
-                BinaryOperationNode.BinaryOperator op = "+".equals(opText) ? ADD : SUBTRACT;
+                BinaryIntegerOperationNode.BinaryOperator op = "+".equals(opText) ? ADD : SUBTRACT;
 
-                result = BinaryOperationNodeGen.create(op, result, right);
+                result = BinaryIntegerOperationNodeGen.create(op, result, right);
             }
             return result;
         } else {
@@ -233,7 +234,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 String opText = ctx.getChild(i).getText();
                 ExpressionNode right = visit(ctx.unaryExpr((i + 1) / 2));
 
-                BinaryOperationNode.BinaryOperator op;
+                BinaryIntegerOperationNode.BinaryOperator op;
                 if ("*".equals(opText)) {
                     op = MULTIPLY;
                 } else if ("/".equals(opText)) {
@@ -242,7 +243,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     op = MODULO;
                 }
 
-                result = BinaryOperationNodeGen.create(op, result, right);
+                result = BinaryIntegerOperationNodeGen.create(op, result, right);
             }
             return result;
         } else {
@@ -254,7 +255,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     public ExpressionNode visitUnaryExpr(LamaParser.UnaryExprContext ctx) {
         if (ctx.getChild(0) != null && ctx.getChild(0).getText().equals("-")) {
             ExpressionNode operand = visit(ctx.postfixExpression());
-            return BinaryOperationNodeGen.create(SUBTRACT, new IntegerLiteralNode(0), operand);
+            return BinaryIntegerOperationNodeGen.create(SUBTRACT, new IntegerLiteralNode(0), operand);
         } else {
             return visit(ctx.postfixExpression());
         }
@@ -733,7 +734,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         return new IntegerLiteralNode(0);
     }
 
-    private BinaryOperationNode.BinaryOperator fromComparisonOperator(String opText) {
+    private BinaryIntegerOperationNode.BinaryOperator fromComparisonOperator(String opText) {
         switch (opText) {
             case "==":
                 return EQUAL;
