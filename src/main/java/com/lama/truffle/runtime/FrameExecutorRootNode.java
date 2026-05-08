@@ -1,39 +1,48 @@
 package com.lama.truffle.runtime;
 
 import com.lama.truffle.nodes.ExpressionNode;
+import com.lama.truffle.nodes.ReadArgumentNode;
+import com.lama.truffle.nodes.WriteLocalVariableNodeGen;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.RootNode;
 
 public final class FrameExecutorRootNode extends RootNode {
+    private final String name;
     private final int[] parameterSlots;
 
-    @Child
-    private ExpressionNode body;
+    @Children private final ExpressionNode[] preable;
+    @Child private ExpressionNode body;
 
-    public FrameExecutorRootNode(FrameDescriptor descriptor,
-                                  ExpressionNode body, int[] parameterSlots) {
+    public FrameExecutorRootNode(String name, FrameDescriptor descriptor,
+            ExpressionNode body, int[] parameterSlots) {
         super(null, descriptor);
+        this.name = name;
         this.body = body;
         this.parameterSlots = parameterSlots;
+        this.preable = new ExpressionNode[parameterSlots.length];
+        for (int i = 0; i < parameterSlots.length; i++) {
+            preable[i] = WriteLocalVariableNodeGen.create(new ReadArgumentNode(i + 1), parameterSlots[i]);
+        }
     }
 
-    public FrameExecutorRootNode(FrameDescriptor descriptor, ExpressionNode body) {
-        this(descriptor, body, null);
+    public FrameExecutorRootNode(String name, FrameDescriptor descriptor, ExpressionNode body) {
+        this(name, descriptor, body, null);
     }
 
     @Override
+    @ExplodeLoop
     public Object execute(VirtualFrame frame) {
-        Object[] args = frame.getArguments();
-        if (args == null) args = new Object[0];
-
-        // Bind parameters if this is a function scope (arguments start at index 1)
-        if (parameterSlots != null) {
-            for (int i = 0; i < parameterSlots.length && i < args.length - 1; i++) {
-                frame.setObject(parameterSlots[i], args[i + 1]);
-            }
+        for (int i = 0; i < parameterSlots.length; i++) {
+            preable[i].execute(frame);
         }
 
         return body.execute(frame);
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 }

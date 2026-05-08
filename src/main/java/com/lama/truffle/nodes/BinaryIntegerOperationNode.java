@@ -87,20 +87,9 @@ public abstract class BinaryIntegerOperationNode extends ExpressionNode {
             case LOGICAL_OR:
                 return left != 0 ? left : right;
             default:
-                throw new UnsupportedOperationException("Operator " + operator + " not supported for integers");
+                throw new UnsupportedOperationException("Operator not supported for integers");
         }
     }
-
-    // @Specialization
-    // protected Object doObjectObject(Object left, Object right) {
-    //     switch (operator) {
-    //         case CONS:
-    //             return new List(left, (List) right);
-
-    //         default:
-    //             throw new UnsupportedOperationException("Operator " + operator + " not supported for objects");
-    //     }
-    // }
 
     @Override
     public Object execute(VirtualFrame frame) {

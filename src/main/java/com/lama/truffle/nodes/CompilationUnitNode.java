@@ -16,20 +16,25 @@ public class CompilationUnitNode extends ExpressionNode {
 
     private final static Scanner s = new Scanner(System.in);
 
+    @Children private ExpressionNode[] preableNodes;
     @Child private ExpressionNode body;
     private final int[] slots;
 
     public CompilationUnitNode(ExpressionNode body, int[] slots) {
         this.body = body;
         this.slots = slots;
+        this.preableNodes = new ExpressionNode[slots.length];
+        for(int i = 0; i < slots.length; i++) {
+            preableNodes[i] = WriteLocalVariableNodeGen.create(new ClosureLiteralNode(funcs[i]), i);
+        }
     }
 
     @Override @ExplodeLoop
     public Object execute(VirtualFrame frame) {
         for (int i = 0; i < slots.length; i++) {
-            frame.setObject(slots[i], funcs[i]);
+            preableNodes[i].execute(frame);
         }
-        return this.body.execute(frame);
+        return body.execute(frame);
     }
 
     public static int[] prepareScope(Scope scope) {

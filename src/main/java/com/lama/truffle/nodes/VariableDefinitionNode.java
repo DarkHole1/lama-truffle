@@ -1,8 +1,6 @@
 package com.lama.truffle.nodes;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-
-public class VariableDefinitionNode extends DefinitionNode {
+public abstract class VariableDefinitionNode extends DefinitionNode {
 
     private final String variableName;
     private final int slot;
@@ -14,11 +12,8 @@ public class VariableDefinitionNode extends DefinitionNode {
         this.valueNode = valueNode;
     }
 
-    @Override
-    public Object execute(VirtualFrame frame) {
-        Object value = (valueNode != null) ? valueNode.execute(frame) : 0;
-        frame.setObject(slot, value);
-        return null;
+    public static ExpressionNode create(String variableName, int slot, ExpressionNode valueNode) {
+        return WriteLocalVariableNodeGen.create(valueNode, slot);
     }
 
     public String getVariableName() {

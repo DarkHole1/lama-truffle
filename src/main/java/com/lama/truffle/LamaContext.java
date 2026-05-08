@@ -1,26 +1,16 @@
 package com.lama.truffle;
 
-import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.TruffleLanguage.ContextReference;
+import com.oracle.truffle.api.nodes.Node;
 
 public final class LamaContext {
 
-    private static final ThreadLocal<LamaContext> currentContext = new ThreadLocal<>();
+    private static final ContextReference<LamaContext> REFERENCE = ContextReference.create(LamaLanguage.class);
 
-    private final TruffleLanguage.Env env;
-
-    public LamaContext(TruffleLanguage.Env env) {
-        this.env = env;
+    public static LamaContext get(Node node) {
+        return REFERENCE.get(node);
     }
 
-    public static LamaContext getCurrentContext() {
-        return currentContext.get();
-    }
-
-    public static void setCurrentContext(LamaContext context) {
-        currentContext.set(context);
-    }
-
-    public TruffleLanguage.Env getEnv() {
-        return env;
+    public LamaContext() {
     }
 }

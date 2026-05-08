@@ -20,7 +20,7 @@ public class ForLoopBodyNode extends ExpressionNode {
 
         while (true) {
             Object conditionValue = condition.execute(frame);
-            long cond = conditionValue instanceof Number ? ((Number) conditionValue).longValue() : 0;
+            long cond = (Long)conditionValue;
 
             if (cond == 0) {
                 break;

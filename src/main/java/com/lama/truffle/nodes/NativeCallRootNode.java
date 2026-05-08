@@ -7,11 +7,13 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
 public final class NativeCallRootNode extends RootNode {
+    private final String name;
     private Function<Object[], Object> func;
 
-    public NativeCallRootNode(Function<Object[], Object> func) {
+    public NativeCallRootNode(String name, Function<Object[], Object> func) {
         super(null);
         this.func = func;
+        this.name = name;
     }
 
     @Override
@@ -22,5 +24,10 @@ public final class NativeCallRootNode extends RootNode {
     @TruffleBoundary
     Object executeNative(Object[] arguments) {
         return func.apply(arguments);
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 }

@@ -5,26 +5,26 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 public class ScopeNode extends ExpressionNode {
 
-    @Children private DefinitionNode[] definitions;
+    @Children private ExpressionNode[] definitions;
     @Child private ExpressionNode expression;
 
-    public ScopeNode(DefinitionNode[] definitions, ExpressionNode expression) {
+    public ScopeNode(ExpressionNode[] definitions, ExpressionNode expression) {
         this.definitions = definitions;
         this.expression = expression;
     }
 
     @Override @ExplodeLoop
     public Object execute(VirtualFrame frame) {
-        for (DefinitionNode definition : definitions) {
+        for (ExpressionNode definition : definitions) {
             definition.execute(frame);
         }
         if (expression != null) {
             return expression.execute(frame);
         }
-        return 0;
+        return 0L;
     }
 
-    public DefinitionNode[] getDefinitions() {
+    public ExpressionNode[] getDefinitions() {
         return definitions;
     }
 

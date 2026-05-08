@@ -1,19 +1,5 @@
-var n, x, i;
-
-fun printString (x) {
-  for i:=0, i<x.length, i:=i+1 do
-    write (x[i])    
-  od
+fun factorial(acc, n) {
+  if n == 1 then acc else factorial((acc * n + 1) % 100, n - 1) fi
 }
 
-n := read ();
-
-x := "abcdefgh";
-
-printString (x);
-
-for i:=0, i<x.length, i:=i+1 do
-  x[i] := x[i]+2
-od;
-
-printString (x)
+factorial(1, 399)

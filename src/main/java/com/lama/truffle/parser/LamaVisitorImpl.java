@@ -6,16 +6,35 @@ import com.lama.truffle.parser.LamaParser.*;
 import com.lama.truffle.runtime.Scope;
 import com.lama.truffle.runtime.VariableLookup;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.source.Source;
+import com.oracle.truffle.api.source.SourceSection;
 
 import static com.lama.truffle.nodes.BinaryIntegerOperationNode.BinaryOperator.*;
+
+import java.util.ArrayList;
+
+import org.antlr.v4.runtime.ParserRuleContext;
 
 public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     private Scope currentScope;
     private FrameDescriptor rootFrameDescriptor;
+    final Source source;
+
+    public LamaVisitorImpl(Source source) {
+        this.source = source;
+    }
 
     public FrameDescriptor getRootFrameDescriptor() {
         return rootFrameDescriptor;
+    }
+
+    ExpressionNode setSource(ParserRuleContext ctx, ExpressionNode expr) {
+        int start = ctx.getStart().getStartIndex();
+        int stop = ctx.getStop().getStopIndex();
+        SourceSection section = source.createSection(start, stop - start);
+        expr.setSourceSection(section);
+        return expr;
     }
 
     @Override
@@ -25,7 +44,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             int[] slots = CompilationUnitNode.prepareScope(currentScope);
             ExpressionNode body = visitScopeExpression(ctx.scopeExpression());
             rootFrameDescriptor = currentScope.getBuilder().build();
-            return new CompilationUnitNode(body, slots);
+            return setSource(ctx, new CompilationUnitNode(body, slots));
         }
         rootFrameDescriptor = currentScope.getBuilder().build();
         return null;
@@ -38,37 +57,24 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         currentScope = childScope;
 
         try {
-            int size = 0;
             for (DefinitionContext defCtx : ctx.definition()) {
                 if (defCtx.variableDefinition() != null) {
                     VariableDefinitionSequenceContext seq = defCtx.variableDefinition().variableDefinitionSequence();
                     for (VariableDefinitionItemContext itemCtx : seq.variableDefinitionItem()) {
                         String varName = itemCtx.LIDENT().getText();
                         childScope.allocateVariable(varName);
-                        size++;
                     }
                 } else if (defCtx.functionDefinition() != null) {
                     String funcName = defCtx.functionDefinition().LIDENT().getText();
                     childScope.allocateVariable(funcName);
-                    size++;
                 }
             }
 
-            DefinitionNode[] definitions = new DefinitionNode[0];
-            if (ctx.definition().size() > 0) {
-                definitions = new DefinitionNode[size];
-                int j = 0;
-                for (int i = 0; i < ctx.definition().size(); i++) {
-                    ExpressionNode def = visitDefinition(ctx.definition(i));
-                    if (def instanceof DefinitionNode ddef) {
-                        definitions[j++] = ddef;
-                    } else {
-                        SequenceNode sdef = (SequenceNode)def;
-                        for (ExpressionNode expr : sdef.getExpressions()) {
-                            definitions[j++] = (DefinitionNode)expr;
-                        }
-                    }
-                }
+            ArrayList<ExpressionNode> definitions = new ArrayList<>();
+
+            for (int i = 0; i < ctx.definition().size(); i++) {
+                ExpressionNode def = visitDefinition(ctx.definition(i));
+                definitions.add(def);
             }
 
             ExpressionNode expression = null;
@@ -76,7 +82,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 expression = visit(ctx.expression());
             }
 
-            return new ScopeNode(definitions, expression);
+            return setSource(ctx, new ScopeNode(definitions.toArray(new ExpressionNode[0]), expression));
         } finally {
             currentScope = previousScope;
         }
@@ -102,7 +108,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         for (var i = 0; i < exprs.length; i++) {
             exprs[i] = visit(seq.variableDefinitionItem(i));
         }
-        return new SequenceNode(exprs);
+        return setSource(ctx, new SequenceNode(exprs));
     }
 
     public ExpressionNode visitVariableDefinitionItem(LamaParser.VariableDefinitionItemContext ctx) {
@@ -113,7 +119,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         if (ctx.basicExpression() != null) {
             valueNode = visit(ctx.basicExpression());
         }
-        return new VariableDefinitionNode(varName, slot, valueNode);
+        return setSource(ctx, VariableDefinitionNode.create(varName, slot, valueNode));
     }
 
     @Override
@@ -144,7 +150,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 throw new RuntimeException("Undefined variable: " + varName);
             }
             ExpressionNode right = visit(ctx.assignmentExpr());
-            return new VariableWriteNode(varName, lookup, right);
+            return setSource(ctx, VariableWriteNode.create(varName, lookup, right));
         } else {
             return visit(ctx.listConstructorExpr());
         }
@@ -155,7 +161,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         if (ctx.getChildCount() > 1 && ctx.getChild(1).getText().equals(":")) {
             ExpressionNode left = visit(ctx.disjunctionExpr());
             ExpressionNode right = visit(ctx.listConstructorExpr());
-            return BinaryObjectOperationNodeGen.create(BinaryOperator.CONS, left, right);
+            return setSource(ctx, BinaryObjectOperationNodeGen.create(BinaryOperator.CONS, left, right));
         } else {
             return visit(ctx.disjunctionExpr());
         }
@@ -171,7 +177,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     result = BinaryIntegerOperationNodeGen.create(LOGICAL_OR, result, right);
                 }
             }
-            return result;
+            return setSource(ctx, result);
         } else {
             return visit(ctx.conjunctionExpr(0));
         }
@@ -187,7 +193,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     result = BinaryIntegerOperationNodeGen.create(LOGICAL_AND, result, right);
                 }
             }
-            return result;
+            return setSource(ctx, result);
         } else {
             return visit(ctx.comparisonExpr(0));
         }
@@ -202,7 +208,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             String opText = ctx.getChild(1).getText();
             BinaryIntegerOperationNode.BinaryOperator op = fromComparisonOperator(opText);
 
-            return BinaryIntegerOperationNodeGen.create(op, left, right);
+            return setSource(ctx, BinaryIntegerOperationNodeGen.create(op, left, right));
         } else {
             return visit(ctx.additiveExpr(0));
         }
@@ -220,7 +226,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
                 result = BinaryIntegerOperationNodeGen.create(op, result, right);
             }
-            return result;
+            return setSource(ctx, result);
         } else {
             return visit(ctx.multiplicativeExpr(0));
         }
@@ -245,7 +251,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
                 result = BinaryIntegerOperationNodeGen.create(op, result, right);
             }
-            return result;
+            return setSource(ctx, result);
         } else {
             return visit(ctx.unaryExpr(0));
         }
@@ -287,7 +293,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             if (lookup == null) {
                 throw new RuntimeException("Undefined variable: " + varName);
             }
-            ExpressionNode functionNode = new VariableAccessNode(varName, lookup);
+            ExpressionNode functionNode = VariableAccessNode.create(varName, lookup);
 
             ExpressionNode[] argumentNodes = new ExpressionNode[ctx.expression().size() + 1];
             argumentNodes[0] = visit(ctx.postfixExpression());
@@ -295,7 +301,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 argumentNodes[i + 1] = visit(ctx.expression(i));
             }
 
-            return new FunctionCallNode(functionNode, argumentNodes);
+            return setSource(ctx, new FunctionCallNode(functionNode, argumentNodes));
         }
         return visit(ctx.primary());
     }
@@ -304,11 +310,11 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     public ExpressionNode visitPrimary(LamaParser.PrimaryContext ctx) {
         if (ctx.DECIMAL() != null) {
             long value = Long.parseLong(ctx.DECIMAL().getText());
-            return new IntegerLiteralNode(value);
+            return setSource(ctx, new IntegerLiteralNode(value));
         } else if (ctx.STRING() != null) {
             String value = ctx.STRING().getText();
             value = value.substring(1, value.length() - 1);
-            return new StringLiteralNode(value);
+            return setSource(ctx, new StringLiteralNode(value));
         } else if (ctx.CHAR() != null) {
             String value = ctx.CHAR().getText();
             value = value.substring(1, value.length() - 1);
@@ -319,11 +325,11 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             if (lookup == null) {
                 throw new RuntimeException("Undefined variable: " + varName);
             }
-            return new VariableAccessNode(varName, lookup);
+            return setSource(ctx, VariableAccessNode.create(varName, lookup));
         } else if (ctx.TRUE() != null) {
-            return new BooleanLiteralNode(true);
+            return setSource(ctx, new BooleanLiteralNode(true));
         } else if (ctx.FALSE() != null) {
-            return new BooleanLiteralNode(false);
+            return setSource(ctx, new BooleanLiteralNode(false));
         } else if (ctx.getChild(0) != null && ctx.getChild(0).getText().equals("(") && ctx.scopeExpression() != null) {
             return visit(ctx.scopeExpression());
         }
@@ -354,7 +360,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 ExpressionNode body = visit(ctx.functionBody());
                 FrameDescriptor descriptor = functionScope.getBuilder().build();
 
-                return new FunctionNode(paramNames, paramSlots, descriptor, body);
+                return setSource(ctx, new FunctionNode(paramNames, paramSlots, descriptor, body));
             } finally {
                 currentScope = previousScope;
             }
@@ -429,9 +435,9 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
         ExpressionNode[] elifBranchesArray = elifBranches.toArray(new ExpressionNode[0]);
 
-        return new IfNode(condition, thenBranch,
+        return setSource(ctx, new IfNode(condition, thenBranch,
                 elifConditions.toArray(new ExpressionNode[0]),
-                elifBranchesArray, elseBranch);
+                elifBranchesArray, elseBranch));
     }
 
     @Override
@@ -445,7 +451,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         currentScope = previousScope;
 
         WhileLoopBodyNode loopBody = new WhileLoopBodyNode(condition, body);
-        return new WhileNode(loopBody);
+        return setSource(ctx, new WhileNode(loopBody));
     }
 
     @Override
@@ -458,7 +464,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         currentScope = previousScope;
 
         DoWhileLoopBodyNode loopBody = new DoWhileLoopBodyNode(body, condition);
-        return new DoWhileNode(loopBody);
+        return setSource(ctx, new DoWhileNode(loopBody));
     }
 
     @Override
@@ -476,7 +482,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             ExpressionNode update = visit(ctx.expression(1));
             ExpressionNode body = visit(ctx.scopeExpression(1));
             ForLoopBodyNode loopBody = new ForLoopBodyNode(condition, update, body);
-            return new ForNode(init, loopBody);
+            return setSource(ctx, new ForNode(init, loopBody));
         } finally {
             currentScope = previousScope;
         }
@@ -485,17 +491,27 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
     static class PatternVisitor extends LamaBaseVisitor<PatternNode> {
         private final Scope scope;
         private final int scrutineeSlot;
+        private final Source source;
 
-        PatternVisitor(Scope scope, int scrutineeSlot) {
+        PatternVisitor(Scope scope, int scrutineeSlot, Source source) {
             this.scope = scope;
             this.scrutineeSlot = scrutineeSlot;
+            this.source = source;
+        }
+
+        PatternNode setSource(ParserRuleContext ctx, PatternNode expr) {
+            int start = ctx.getStart().getStartIndex();
+            int stop = ctx.getStop().getStopIndex();
+            SourceSection section = source.createSection(start, stop - start);
+            expr.setSourceSection(section);
+            return expr;
         }
 
         @Override
         public PatternNode visitConsPattern(ConsPatternContext ctx) {
             PatternNode headPattern = visit(ctx.simplePattern());
             PatternNode tailPattern = visit(ctx.pattern());
-            return new ConsPatternNode(headPattern, tailPattern, scrutineeSlot);
+            return setSource(ctx, new ConsPatternNode(headPattern, tailPattern, scrutineeSlot));
         }
 
         @Override
@@ -507,7 +523,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 return visit(ctx.arrayPattern());
             }
             if (ctx.wildcardPattern() != null) {
-                return new WildcardPatternNode(scrutineeSlot);
+                return setSource(ctx, new WildcardPatternNode(scrutineeSlot));
             }
             if (ctx.sExprPattern() != null) {
                 return visit(ctx.sExprPattern());
@@ -519,50 +535,50 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     PatternNode nestedPattern = visit(ctx.pattern());
                     return new VariablePatternNode(varName, slot, nestedPattern, scrutineeSlot);
                 }
-                return new VariablePatternNode(varName, slot, null, scrutineeSlot);
+                return setSource(ctx, new VariablePatternNode(varName, slot, null, scrutineeSlot));
             }
             if (ctx.DECIMAL() != null) {
                 long value = Long.parseLong(ctx.getText());
-                return new LiteralPatternNode(value, scrutineeSlot);
+                return setSource(ctx, new LiteralPatternNode(value, scrutineeSlot));
             }
             if (ctx.STRING() != null) {
                 String value = ctx.STRING().getText();
                 value = value.substring(1, value.length() - 1);
-                return new LiteralPatternNode(value, scrutineeSlot);
+                return setSource(ctx, new LiteralPatternNode(value, scrutineeSlot));
             }
             if (ctx.CHAR() != null) {
                 String value = ctx.CHAR().getText();
                 value = value.substring(1, value.length() - 1);
-                return new LiteralPatternNode((long) value.charAt(0), scrutineeSlot);
+                return setSource(ctx, new LiteralPatternNode((long) value.charAt(0), scrutineeSlot));
             }
             if (ctx.TRUE() != null) {
-                return new LiteralPatternNode(1L, scrutineeSlot);
+                return setSource(ctx, new LiteralPatternNode(1L, scrutineeSlot));
             }
             if (ctx.FALSE() != null) {
-                return new LiteralPatternNode(0L, scrutineeSlot);
+                return setSource(ctx, new LiteralPatternNode(0L, scrutineeSlot));
             }
             if (ctx.BOX() != null) {
-                return new TypePatternNode(TypePatternNode.Type.BOX, scrutineeSlot);
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.BOX, scrutineeSlot));
             }
             if (ctx.VAL() != null) {
-                return new TypePatternNode(TypePatternNode.Type.VAL, scrutineeSlot);
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.VAL, scrutineeSlot));
             }
             if (ctx.STR() != null) {
-                return new TypePatternNode(TypePatternNode.Type.STR, scrutineeSlot);
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.STR, scrutineeSlot));
             }
             if (ctx.ARRAY_KW() != null) {
-                return new TypePatternNode(TypePatternNode.Type.ARRAY, scrutineeSlot);
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.ARRAY, scrutineeSlot));
             }
             if (ctx.SEXP() != null) {
-                return new TypePatternNode(TypePatternNode.Type.SEXP, scrutineeSlot);
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.SEXP, scrutineeSlot));
             }
             if (ctx.FUN() != null) {
-                return new TypePatternNode(TypePatternNode.Type.FUN, scrutineeSlot);
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.FUN, scrutineeSlot));
             }
             if (ctx.pattern() != null) {
                 return visit(ctx.pattern());
             }
-            return new WildcardPatternNode(scrutineeSlot);
+            return setSource(ctx, new WildcardPatternNode(scrutineeSlot));
         }
 
         @Override
@@ -575,7 +591,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     childPatterns[i] = visit(ctx.pattern(i));
                 }
             }
-            return new SexpPatternNode(tagName, childPatterns, scrutineeSlot);
+            return setSource(ctx, new SexpPatternNode(tagName, childPatterns, scrutineeSlot));
         }
 
         @Override
@@ -587,7 +603,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     elementPatterns[i] = visit(ctx.pattern(i));
                 }
             }
-            return new ArrayPatternNode(elementPatterns, scrutineeSlot);
+            return setSource(ctx, new ArrayPatternNode(elementPatterns, scrutineeSlot));
         }
 
         @Override
@@ -599,7 +615,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     elementPatterns[i] = visit(ctx.pattern(i));
                 }
             }
-            return new ListPatternNode(elementPatterns, scrutineeSlot);
+            return setSource(ctx, new ListPatternNode(elementPatterns, scrutineeSlot));
         }
     }
 
@@ -614,7 +630,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         int scrutineeSlot = caseScope.allocateVariable(null);
 
         try {
-            PatternVisitor patternVisitor = new PatternVisitor(caseScope, scrutineeSlot);
+            PatternVisitor patternVisitor = new PatternVisitor(caseScope, scrutineeSlot, source);
 
             PatternNode[] patterns = new PatternNode[ctx.caseBranches().caseBranch().size()];
             ExpressionNode[] bodies = new ExpressionNode[ctx.caseBranches().caseBranch().size()];
@@ -631,7 +647,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 bodies[i] = expression;
             }
 
-            return new CaseNode(scrutinee, patterns, bodies, scrutineeSlot);
+            return setSource(ctx, new CaseNode(scrutinee, patterns, bodies, scrutineeSlot));
         } finally {
             currentScope = previousScope;
         }
@@ -645,7 +661,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         int scrutineeSlot = letScope.allocateVariable(null);
 
         try {
-            PatternVisitor patternVisitor = new PatternVisitor(letScope, scrutineeSlot);
+            PatternVisitor patternVisitor = new PatternVisitor(letScope, scrutineeSlot, source);
             PatternNode pattern = ctx.pattern().accept(patternVisitor);
 
             currentScope = previousScope;
@@ -654,7 +670,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             currentScope = letScope;
             ExpressionNode body = visit(ctx.expression(1));
 
-            return new LetInNode(boundExpression, body, pattern, scrutineeSlot);
+            return setSource(ctx, new LetInNode(boundExpression, body, pattern, scrutineeSlot));
         } finally {
             currentScope = previousScope;
         }
@@ -669,7 +685,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 elementNodes[i] = visit(ctx.expression(i));
             }
         }
-        return new ListLiteralNode(elementNodes);
+        return setSource(ctx, new ListLiteralNode(elementNodes));
     }
 
     @Override
@@ -681,7 +697,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 elementNodes[i] = visit(ctx.expression(i));
             }
         }
-        return new ArrayLiteralNode(elementNodes);
+        return setSource(ctx, new ArrayLiteralNode(elementNodes));
     }
 
     // Definition visitors
@@ -714,8 +730,8 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             ExpressionNode body = visit(ctx.functionBody());
             FrameDescriptor descriptor = functionScope.getBuilder().build();
 
-            return new FunctionDefinitionNode(functionName, paramNames, paramSlots,
-                    descriptor, body, funcSlot);
+            return setSource(ctx, FunctionDefinitionNode.create(functionName, paramNames, paramSlots,
+                    descriptor, body, funcSlot));
         } finally {
             currentScope = previousScope;
         }
@@ -726,12 +742,12 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         if (ctx.scopeExpression() != null) {
             return visit(ctx.scopeExpression());
         }
-        return new IntegerLiteralNode(0);
+        return setSource(ctx, new IntegerLiteralNode(0));
     }
 
     @Override
     public ExpressionNode visitFunctionArguments(LamaParser.FunctionArgumentsContext ctx) {
-        return new IntegerLiteralNode(0);
+        return setSource(ctx, new IntegerLiteralNode(0));
     }
 
     private BinaryIntegerOperationNode.BinaryOperator fromComparisonOperator(String opText) {

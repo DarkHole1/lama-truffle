@@ -7,15 +7,22 @@ public class VariableAccessNode extends ExpressionNode {
 
     private final String variableName;
     private final VariableLookup lookup;
+    @Child private ExpressionNode readNode;
 
-    public VariableAccessNode(String variableName, VariableLookup lookup) {
+    private VariableAccessNode(String variableName, VariableLookup lookup, ReadLocalVariableNode readNode) {
         this.variableName = variableName;
         this.lookup = lookup;
+        this.readNode = readNode;
+    }
+
+    public static ExpressionNode create(String variableName, VariableLookup lookup) {
+        return new VariableAccessNode(variableName, lookup, ReadLocalVariableNodeGen.create(lookup.getSlot()));
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
-        return lookup.read(frame);
+        VirtualFrame readFrame = lookup.getFrame(frame);
+        return readNode.execute(readFrame);
     }
 
     public String getVariableName() {

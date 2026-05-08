@@ -22,7 +22,7 @@ public final class Closure {
         this.name = name;
         this.materializedParentFrame = materializedParentFrame;
         
-        RootNode root = new FrameExecutorRootNode(descriptor, body, parameterSlots);
+        RootNode root = new FrameExecutorRootNode(name, descriptor, body, parameterSlots);
         this.callTarget = root.getCallTarget();
     }
 
@@ -30,7 +30,7 @@ public final class Closure {
         this.name = name;
         this.materializedParentFrame = null;
 
-        RootNode root = new NativeCallRootNode(callable);
+        RootNode root = new NativeCallRootNode(name, callable);
         this.callTarget = root.getCallTarget();
     }
 

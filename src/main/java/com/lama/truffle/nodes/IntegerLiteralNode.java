@@ -1,6 +1,7 @@
 package com.lama.truffle.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 public class IntegerLiteralNode extends LiteralNode {
 
@@ -10,6 +11,11 @@ public class IntegerLiteralNode extends LiteralNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
+        return (long) getValue();
+    }
+
+    @Override
+    public long executeLong(VirtualFrame frame) throws UnexpectedResultException {
         return (long) getValue();
     }
 }

@@ -11,37 +11,30 @@ import com.lama.truffle.parser.LamaParser;
 import com.lama.truffle.parser.LamaVisitorImpl;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.nodes.Node;
 
 @TruffleLanguage.Registration(name = "Lama", id = "lama", version = "1.0.0")
 public final class LamaLanguage extends TruffleLanguage<LamaContext> {
-    public static LamaLanguage get() {
-        return TruffleLanguage.getCurrentLanguage(LamaLanguage.class);
-    }
+    private static final LanguageReference<LamaLanguage> REFERENCE = LanguageReference.create(LamaLanguage.class);
 
-    public static LamaContext getCurrentContext() {
-        return TruffleLanguage.getCurrentContext(LamaLanguage.class);
+    public static LamaLanguage get(Node node) {
+        return REFERENCE.get(node);
     }
 
     @Override
     protected LamaContext createContext(TruffleLanguage.Env env) {
-        LamaContext context = new LamaContext(env);
-        LamaContext.setCurrentContext(context);
-        return context;
+        return new LamaContext();
     }
 
     @Override
     protected void initializeContext(LamaContext context) {
     }
 
-    protected boolean isObjectOfLanguage(Object object) {
-        return false;
-    }
-
     @Override
     protected CallTarget parse(ParsingRequest request) throws Exception {
         CharStream stream = CharStreams.fromReader(request.getSource().getReader());
         LamaParser parser = new LamaParser(new CommonTokenStream(new LamaLexer(stream)));
-        LamaVisitorImpl visitor = new LamaVisitorImpl();
+        LamaVisitorImpl visitor = new LamaVisitorImpl(request.getSource());
         ExpressionNode node = parser.compilationUnit().accept(visitor);
 
         LamaRootNode rootNode = new LamaRootNode(node, visitor.getRootFrameDescriptor());

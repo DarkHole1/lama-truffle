@@ -17,7 +17,7 @@ public class App {
         try (Context context = Context.create()) {
             Source source = Source.newBuilder("lama", new File(args[0])).build();
             Object result = context.eval(source);
-            // System.out.println(result);
+            System.out.println(result);
         }
     }
 }

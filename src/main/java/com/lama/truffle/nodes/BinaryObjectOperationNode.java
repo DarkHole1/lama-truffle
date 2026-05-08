@@ -49,7 +49,7 @@ public abstract class BinaryObjectOperationNode extends ExpressionNode {
                 return new List(left, (List) right);
 
             default:
-                throw new UnsupportedOperationException("Operator " + operator + " not supported for objects");
+                throw new UnsupportedOperationException("Operator not supported for objects");
         }
     }
 

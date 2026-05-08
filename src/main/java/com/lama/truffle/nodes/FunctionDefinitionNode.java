@@ -11,29 +11,30 @@ public class FunctionDefinitionNode extends DefinitionNode {
     private final String[] parameterNames;
     private final int[] parameterSlots;
     private final FrameDescriptor descriptor;
-    private final int functionSlot;  
+    // private final int functionSlot;  
     @Child
     private ExpressionNode body;
 
     public FunctionDefinitionNode(String functionName, String[] parameterNames,
                                    int[] parameterSlots, FrameDescriptor descriptor,
-                                   ExpressionNode body, int functionSlot) {
+                                   ExpressionNode body) {
         this.functionName = functionName;
         this.parameterNames = parameterNames;
         this.parameterSlots = parameterSlots;
         this.descriptor = descriptor;
         this.body = body;
-        this.functionSlot = functionSlot;
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
         MaterializedFrame materializedFrame = frame.materialize();
-        Closure closure = new Closure(functionName, parameterNames, parameterSlots, body, descriptor, materializedFrame);
+        return new Closure(functionName, parameterNames, parameterSlots, body, descriptor, materializedFrame);
+    }
 
-        frame.setObject(functionSlot, closure);
-
-        return null;
+    public static ExpressionNode create(String functionName, String[] parameterNames,
+                                   int[] parameterSlots, FrameDescriptor descriptor,
+                                   ExpressionNode body, int functionSlot) {
+        return WriteLocalVariableNodeGen.create(new FunctionDefinitionNode(functionName, parameterNames, parameterSlots, descriptor, body), functionSlot);
     }
 
     public String getFunctionName() {
@@ -54,9 +55,5 @@ public class FunctionDefinitionNode extends DefinitionNode {
 
     public FrameDescriptor getDescriptor() {
         return descriptor;
-    }
-
-    public int getFunctionSlot() {
-        return functionSlot;
     }
 }

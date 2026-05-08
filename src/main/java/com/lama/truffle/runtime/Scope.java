@@ -43,7 +43,7 @@ public class Scope {
         if (variables.containsKey(name)) {
             return variables.get(name);
         }
-        int slot = builder.addSlot(FrameSlotKind.Object, name, null);
+        int slot = builder.addSlot(FrameSlotKind.Illegal, name, null);
         variables.put(name, slot);
         return slot;
     }

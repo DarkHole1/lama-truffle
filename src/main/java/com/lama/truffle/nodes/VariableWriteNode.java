@@ -7,19 +7,22 @@ public class VariableWriteNode extends ExpressionNode {
 
     private final String variableName;
     private final VariableLookup lookup;
-    @Child private ExpressionNode valueNode;
+    @Child private ExpressionNode writeNode;
 
-    public VariableWriteNode(String variableName, VariableLookup lookup, ExpressionNode valueNode) {
+    private VariableWriteNode(String variableName, VariableLookup lookup, WriteLocalVariableNode writeNode) {
         this.variableName = variableName;
         this.lookup = lookup;
-        this.valueNode = valueNode;
+        this.writeNode = writeNode;
+    }
+
+    public static ExpressionNode create(String variableName, VariableLookup lookup, ExpressionNode valueNode) {
+        return new VariableWriteNode(variableName, lookup, WriteLocalVariableNodeGen.create(valueNode, lookup.getSlot()));
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
-        Object value = valueNode.execute(frame);
-        lookup.write(frame, value);
-        return value;
+        VirtualFrame writeFrame = lookup.getFrame(frame);
+        return writeNode.execute(writeFrame);
     }
 
     public String getVariableName() {
@@ -29,8 +32,8 @@ public class VariableWriteNode extends ExpressionNode {
     public VariableLookup getLookup() {
         return lookup;
     }
-
-    public ExpressionNode getValueNode() {
-        return valueNode;
+    
+    public ExpressionNode getWriteNode() {
+        return writeNode;
     }
 }
