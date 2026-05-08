@@ -6,18 +6,16 @@ public class LiteralPatternNode extends PatternNode {
 
     private final Object literalValue;
 
-    public LiteralPatternNode(Object literalValue, int scrutineeSlot) {
-        super(scrutineeSlot);
+    public LiteralPatternNode(Object literalValue) {
         this.literalValue = literalValue;
     }
 
     @Override
-    public boolean executeBoolean(VirtualFrame frame) {
-        Object value = frame.getObject(getScrutineeSlot());
+    public boolean executeBoolean(VirtualFrame frame, Object scrutinee) {
         if (literalValue == null) {
-            return value == null;
+            return scrutinee == null;
         }
-        return literalValue.equals(value);
+        return literalValue.equals(scrutinee);
     }
 
     public Object getLiteralValue() {

@@ -490,12 +490,10 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
 
     static class PatternVisitor extends LamaBaseVisitor<PatternNode> {
         private final Scope scope;
-        private final int scrutineeSlot;
         private final Source source;
 
-        PatternVisitor(Scope scope, int scrutineeSlot, Source source) {
+        PatternVisitor(Scope scope, Source source) {
             this.scope = scope;
-            this.scrutineeSlot = scrutineeSlot;
             this.source = source;
         }
 
@@ -511,7 +509,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         public PatternNode visitConsPattern(ConsPatternContext ctx) {
             PatternNode headPattern = visit(ctx.simplePattern());
             PatternNode tailPattern = visit(ctx.pattern());
-            return setSource(ctx, new ConsPatternNode(headPattern, tailPattern, scrutineeSlot));
+            return setSource(ctx, new ConsPatternNode(headPattern, tailPattern));
         }
 
         @Override
@@ -523,7 +521,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 return visit(ctx.arrayPattern());
             }
             if (ctx.wildcardPattern() != null) {
-                return setSource(ctx, new WildcardPatternNode(scrutineeSlot));
+                return setSource(ctx, new WildcardPatternNode());
             }
             if (ctx.sExprPattern() != null) {
                 return visit(ctx.sExprPattern());
@@ -533,52 +531,52 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 int slot = scope.allocateVariable(varName);
                 if (ctx.pattern() != null) {
                     PatternNode nestedPattern = visit(ctx.pattern());
-                    return new VariablePatternNode(varName, slot, nestedPattern, scrutineeSlot);
+                    return new VariablePatternNode(varName, slot, nestedPattern);
                 }
-                return setSource(ctx, new VariablePatternNode(varName, slot, null, scrutineeSlot));
+                return setSource(ctx, new VariablePatternNode(varName, slot, null));
             }
             if (ctx.DECIMAL() != null) {
                 long value = Long.parseLong(ctx.getText());
-                return setSource(ctx, new LiteralPatternNode(value, scrutineeSlot));
+                return setSource(ctx, new LiteralPatternNode(value));
             }
             if (ctx.STRING() != null) {
                 String value = ctx.STRING().getText();
                 value = value.substring(1, value.length() - 1);
-                return setSource(ctx, new LiteralPatternNode(value, scrutineeSlot));
+                return setSource(ctx, new LiteralPatternNode(value));
             }
             if (ctx.CHAR() != null) {
                 String value = ctx.CHAR().getText();
                 value = value.substring(1, value.length() - 1);
-                return setSource(ctx, new LiteralPatternNode((long) value.charAt(0), scrutineeSlot));
+                return setSource(ctx, new LiteralPatternNode((long) value.charAt(0)));
             }
             if (ctx.TRUE() != null) {
-                return setSource(ctx, new LiteralPatternNode(1L, scrutineeSlot));
+                return setSource(ctx, new LiteralPatternNode(1L));
             }
             if (ctx.FALSE() != null) {
-                return setSource(ctx, new LiteralPatternNode(0L, scrutineeSlot));
+                return setSource(ctx, new LiteralPatternNode(0L));
             }
             if (ctx.BOX() != null) {
-                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.BOX, scrutineeSlot));
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.BOX));
             }
             if (ctx.VAL() != null) {
-                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.VAL, scrutineeSlot));
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.VAL));
             }
             if (ctx.STR() != null) {
-                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.STR, scrutineeSlot));
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.STR));
             }
             if (ctx.ARRAY_KW() != null) {
-                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.ARRAY, scrutineeSlot));
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.ARRAY));
             }
             if (ctx.SEXP() != null) {
-                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.SEXP, scrutineeSlot));
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.SEXP));
             }
             if (ctx.FUN() != null) {
-                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.FUN, scrutineeSlot));
+                return setSource(ctx, new TypePatternNode(TypePatternNode.Type.FUN));
             }
             if (ctx.pattern() != null) {
                 return visit(ctx.pattern());
             }
-            return setSource(ctx, new WildcardPatternNode(scrutineeSlot));
+            return setSource(ctx, new WildcardPatternNode());
         }
 
         @Override
@@ -591,7 +589,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     childPatterns[i] = visit(ctx.pattern(i));
                 }
             }
-            return setSource(ctx, new SexpPatternNode(tagName, childPatterns, scrutineeSlot));
+            return setSource(ctx, new SexpPatternNode(tagName, childPatterns));
         }
 
         @Override
@@ -603,7 +601,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     elementPatterns[i] = visit(ctx.pattern(i));
                 }
             }
-            return setSource(ctx, new ArrayPatternNode(elementPatterns, scrutineeSlot));
+            return setSource(ctx, new ArrayPatternNode(elementPatterns));
         }
 
         @Override
@@ -615,7 +613,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                     elementPatterns[i] = visit(ctx.pattern(i));
                 }
             }
-            return setSource(ctx, new ListPatternNode(elementPatterns, scrutineeSlot));
+            return setSource(ctx, new ListPatternNode(elementPatterns));
         }
     }
 
@@ -627,10 +625,8 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         Scope previousScope = currentScope;
         currentScope = caseScope;
 
-        int scrutineeSlot = caseScope.allocateVariable(null);
-
         try {
-            PatternVisitor patternVisitor = new PatternVisitor(caseScope, scrutineeSlot, source);
+            PatternVisitor patternVisitor = new PatternVisitor(caseScope, source);
 
             PatternNode[] patterns = new PatternNode[ctx.caseBranches().caseBranch().size()];
             ExpressionNode[] bodies = new ExpressionNode[ctx.caseBranches().caseBranch().size()];
@@ -647,7 +643,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
                 bodies[i] = expression;
             }
 
-            return setSource(ctx, new CaseNode(scrutinee, patterns, bodies, scrutineeSlot));
+            return setSource(ctx, new CaseNode(scrutinee, patterns, bodies));
         } finally {
             currentScope = previousScope;
         }
@@ -658,10 +654,9 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
         Scope letScope = new Scope(currentScope);
         Scope previousScope = currentScope;
         currentScope = letScope;
-        int scrutineeSlot = letScope.allocateVariable(null);
 
         try {
-            PatternVisitor patternVisitor = new PatternVisitor(letScope, scrutineeSlot, source);
+            PatternVisitor patternVisitor = new PatternVisitor(letScope, source);
             PatternNode pattern = ctx.pattern().accept(patternVisitor);
 
             currentScope = previousScope;
@@ -670,7 +665,7 @@ public class LamaVisitorImpl extends LamaBaseVisitor<ExpressionNode> {
             currentScope = letScope;
             ExpressionNode body = visit(ctx.expression(1));
 
-            return setSource(ctx, new LetInNode(boundExpression, body, pattern, scrutineeSlot));
+            return setSource(ctx, new LetInNode(boundExpression, body, pattern));
         } finally {
             currentScope = previousScope;
         }

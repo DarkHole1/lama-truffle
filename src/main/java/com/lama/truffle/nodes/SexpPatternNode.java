@@ -8,16 +8,13 @@ public class SexpPatternNode extends PatternNode {
     private final String tagName;
     @Children private final PatternNode[] childPatterns;
 
-    public SexpPatternNode(String tagName, PatternNode[] childPatterns, int scrutineeSlot) {
-        super(scrutineeSlot);
+    public SexpPatternNode(String tagName, PatternNode[] childPatterns) {
         this.tagName = tagName;
         this.childPatterns = childPatterns;
     }
 
     @Override @ExplodeLoop
-    public boolean executeBoolean(VirtualFrame frame) {
-        Object value = frame.getObject(getScrutineeSlot());
-
+    public boolean executeBoolean(VirtualFrame frame, Object value) {
         if (!(value instanceof Sexp)) {
             return false;
         }
@@ -39,8 +36,7 @@ public class SexpPatternNode extends PatternNode {
         }
 
         for (int i = 0; i < childPatterns.length; i++) {
-            frame.setObject(getScrutineeSlot(), sexpValues[i]);
-            if (!childPatterns[i].executeBoolean(frame)) {
+            if (!childPatterns[i].executeBoolean(frame, sexpValues[i])) {
                 return false;
             }
         }

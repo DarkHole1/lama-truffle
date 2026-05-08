@@ -8,14 +8,12 @@ public class ArrayPatternNode extends PatternNode {
 
     @Children private PatternNode[] elementPatterns;
 
-    public ArrayPatternNode(PatternNode[] elementPatterns, int scrutineeSlot) {
-        super(scrutineeSlot);
+    public ArrayPatternNode(PatternNode[] elementPatterns) {
         this.elementPatterns = elementPatterns;
     }
 
     @Override @ExplodeLoop
-    public boolean executeBoolean(VirtualFrame frame) {
-        Object value = frame.getObject(getScrutineeSlot());
+    public boolean executeBoolean(VirtualFrame frame, Object value) {
         if (!(value instanceof Array)) {
             return false;
         }
@@ -31,8 +29,7 @@ public class ArrayPatternNode extends PatternNode {
         }
 
         for (int i = 0; i < elementPatterns.length; i++) {
-            frame.setObject(getScrutineeSlot(), array.getIndex(i));
-            if (!elementPatterns[i].executeBoolean(frame)) {
+            if (!elementPatterns[i].executeBoolean(frame, array.getIndex(i))) {
                 return false;
             }
         }

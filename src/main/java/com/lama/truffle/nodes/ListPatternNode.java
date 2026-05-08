@@ -7,15 +7,12 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 public class ListPatternNode extends PatternNode {
     @Children private final PatternNode[] elementPatterns;
 
-    public ListPatternNode(PatternNode[] elementPatterns, int scrutineeSlot) {
-        super(scrutineeSlot);
+    public ListPatternNode(PatternNode[] elementPatterns) {
         this.elementPatterns = elementPatterns;
     }
 
     @Override @ExplodeLoop
-    public boolean executeBoolean(VirtualFrame frame) {
-        Object value = frame.getObject(getScrutineeSlot());
-
+    public boolean executeBoolean(VirtualFrame frame, Object value) {
         if (!(value instanceof List)) {
             return false;
         }
@@ -31,8 +28,7 @@ public class ListPatternNode extends PatternNode {
             if (current == null) {
                 return false; 
             }
-            frame.setObject(getScrutineeSlot(), current.getFirst());
-            if (!elementPatterns[i].executeBoolean(frame)) {
+            if (!elementPatterns[i].executeBoolean(frame, current.getFirst())) {
                 return false;
             }
             current = current.getNext();

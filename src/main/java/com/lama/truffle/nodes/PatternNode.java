@@ -5,18 +5,9 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class PatternNode extends Node {
-    private final int scrutineeSlot;
     private SourceSection section;
 
-    public PatternNode(int scrutineeSlot) {
-        this.scrutineeSlot = scrutineeSlot;
-    }
-
-    public int getScrutineeSlot() {
-        return scrutineeSlot;
-    }
-
-    abstract boolean executeBoolean(VirtualFrame frame);
+    abstract boolean executeBoolean(VirtualFrame frame, Object scrutinee);
 
     public void setSourceSection(SourceSection section) {
         this.section = section;

@@ -16,14 +16,12 @@ public class TypePatternNode extends PatternNode {
 
     private final Type type;
 
-    public TypePatternNode(Type type, int scrutineeSlot) {
-        super(scrutineeSlot);
+    public TypePatternNode(Type type) {
         this.type = type;
     }
 
     @Override
-    public boolean executeBoolean(VirtualFrame frame) {
-        Object value = frame.getObject(getScrutineeSlot());
+    public boolean executeBoolean(VirtualFrame frame, Object value) {
         switch (type) {
             case BOX:
                 // Boxed value: anything that's not an Integer (unboxed)

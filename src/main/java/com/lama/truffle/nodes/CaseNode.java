@@ -9,13 +9,11 @@ public class CaseNode extends ExpressionNode {
     @Child private ExpressionNode scrutinee;
     @Children private final PatternNode[] patterns;
     @Children private final ExpressionNode[] bodies;
-    private final int scrutineeSlot;
 
-    public CaseNode(ExpressionNode scrutinee, PatternNode[] patterns, ExpressionNode[] bodies, int scrutineeSlot) {
+    public CaseNode(ExpressionNode scrutinee, PatternNode[] patterns, ExpressionNode[] bodies) {
         this.scrutinee = scrutinee;
         this.patterns = patterns;
         this.bodies = bodies;
-        this.scrutineeSlot = scrutineeSlot;
     }
 
     @Specialization @ExplodeLoop
@@ -23,8 +21,7 @@ public class CaseNode extends ExpressionNode {
         Object scrutineeValue = scrutinee.execute(frame);
         
         for (int i = 0; i < patterns.length; i++) {
-            frame.setObject(scrutineeSlot, scrutineeValue);
-            if (patterns[i].executeBoolean(frame)) {
+            if (patterns[i].executeBoolean(frame, scrutineeValue)) {
                 return bodies[i].execute(frame);
             }
         }
