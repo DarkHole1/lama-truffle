@@ -1,6 +1,8 @@
 package com.lama.truffle.types;
 
-public class Array {
+import com.oracle.truffle.api.interop.TruffleObject;
+
+public class Array implements TruffleObject {
     private final Object[] array;
 
     public Array(Object[] array) {
