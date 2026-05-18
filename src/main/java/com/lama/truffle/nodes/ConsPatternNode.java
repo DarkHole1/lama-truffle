@@ -1,6 +1,7 @@
 package com.lama.truffle.nodes;
 
 import com.lama.truffle.types.List;
+import com.lama.truffle.types.ListCons;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public class ConsPatternNode extends PatternNode {
@@ -15,11 +16,11 @@ public class ConsPatternNode extends PatternNode {
 
     @Override
     boolean executeBoolean(VirtualFrame frame, Object value) {
-        if (!(value instanceof List)) {
+        if (!(value instanceof ListCons)) {
             return false;
         }
 
-        List list = (List) value;
+        ListCons list = (ListCons) value;
         Object head = list.getFirst();
         List tail = list.getNext();
 

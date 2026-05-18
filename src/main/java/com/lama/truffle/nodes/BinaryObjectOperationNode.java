@@ -4,6 +4,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.lama.truffle.types.List;
+import com.lama.truffle.types.ListCons;
 
 @NodeChild("left")
 @NodeChild("right")
@@ -46,7 +47,7 @@ public abstract class BinaryObjectOperationNode extends ExpressionNode {
     protected Object doObjectObject(Object left, Object right) {
         switch (operator) {
             case CONS:
-                return new List(left, (List) right);
+                return new ListCons(left, (List) right);
 
             default:
                 throw new UnsupportedOperationException("Operator not supported for objects");

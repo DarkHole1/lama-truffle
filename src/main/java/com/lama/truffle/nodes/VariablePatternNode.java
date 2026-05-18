@@ -6,23 +6,24 @@ public class VariablePatternNode extends PatternNode {
 
     private final String variableName;
     private final int slot;
-    private final PatternNode nestedPatternNode;
+    @Child private PatternNode nestedPatternNode;
     @Child private WriteLocalVariableNode writeVariableNode;
 
     public VariablePatternNode(String variableName, int slot, PatternNode nestedPatternNode) {
         this.variableName = variableName;
         this.slot = slot;
-        this.nestedPatternNode = nestedPatternNode;
+        if (nestedPatternNode != null) {
+            this.nestedPatternNode = nestedPatternNode;
+        } else {
+            this.nestedPatternNode = new WildcardPatternNode();
+        }
         this.writeVariableNode = WriteLocalVariableNodeGen.create(null, slot);
     }
 
     @Override
     public boolean executeBoolean(VirtualFrame frame, Object value) {
         writeVariableNode.executeWrite(frame, value);
-        if (nestedPatternNode != null) {
-            return nestedPatternNode.executeBoolean(frame, value);
-        }
-        return true;
+        return nestedPatternNode.executeBoolean(frame, value);
     }
 
     public String getVariableName() {

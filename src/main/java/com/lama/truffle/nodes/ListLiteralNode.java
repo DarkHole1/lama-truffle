@@ -1,6 +1,8 @@
 package com.lama.truffle.nodes;
 
 import com.lama.truffle.types.List;
+import com.lama.truffle.types.ListCons;
+import com.lama.truffle.types.ListNil;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
@@ -15,10 +17,10 @@ public class ListLiteralNode extends ExpressionNode {
 
     @Override @ExplodeLoop
     public Object execute(VirtualFrame frame) {
-        List result = null;
+        List result = new ListNil();
         for (int i = elementNodes.length - 1; i >= 0; i--) {
             Object value = elementNodes[i].execute(frame);
-            result = new List(value, result);
+            result = new ListCons(value, result);
         }
         return result;
     }
@@ -28,7 +30,7 @@ public class ListLiteralNode extends ExpressionNode {
         List result = null;
         for (int i = elementNodes.length - 1; i >= 0; i--) {
             Object value = elementNodes[i].execute(frame);
-            result = new List(value, result);
+            result = new ListCons(value, result);
         }
         return result;
     }
