@@ -1,7 +1,9 @@
 #!/bin/bash
 
+    # -Djdk.graal.PrintGraph=Network \
+    # -Dgraal.Dump=Truffle:1 \
 java \
-    -Xss128M \
+    -Xss128M -Xms1g -Xmx8g \
     -Dpolyglot.engine.TraceCompilationDetails=true \
     -Dpolyglot.engine.AllowExperimentalOptions=true \
     -Dpolyglot.engine.TraceCompilation=true \
