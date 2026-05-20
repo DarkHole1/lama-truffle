@@ -30,25 +30,25 @@
         <dependency>
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-api</artifactId>
-            <version>23.1.2</version>
+            <version>23.1.11</version>
         </dependency>
         
         <dependency>
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-dsl-processor</artifactId>
-            <version>23.1.2</version>
+            <version>23.1.11</version>
         </dependency>
 
         <dependency>
             <groupId>org.graalvm.polyglot</groupId>
             <artifactId>polyglot</artifactId>
-            <version>23.1.2</version>
+            <version>23.1.11</version>
         </dependency>
 
         <dependency>
             <groupId>org.graalvm.truffle</groupId>
             <artifactId>truffle-runtime</artifactId>
-            <version>23.1.2</version>
+            <version>23.1.11</version>
         </dependency>
     
         
@@ -74,7 +74,7 @@
                         <path>
                             <groupId>org.graalvm.truffle</groupId>
                             <artifactId>truffle-dsl-processor</artifactId>
-                            <version>23.1.2</version>
+                            <version>23.1.11</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

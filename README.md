@@ -1,8 +1,9 @@
 # Building and running
 
-```
-mvn compile
-mvn exec:java -Dexec.args="FILE.lama"
+```bash
+mvn clean package dependency:copy-dependencies -DoutputDirectory=target/dependency
+# Run with debug information
+./start.sh Sort.lama
 ```
 
 # Comparsion
